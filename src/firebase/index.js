@@ -1,5 +1,34 @@
-import { db } from '/src/firebase/config.js';
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
+import { getAnalytics } from 'firebase/analytics';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCxjlhbXp98gSe73aO5e3elzUmi1XShLmw",
+  authDomain: "thehomelytreasures-85664.firebaseapp.com",
+  projectId: "thehomelytreasures-85664",
+  storageBucket: "thehomelytreasures-85664.firebasestorage.app",
+  messagingSenderId: "997659851769",
+  appId: "1:997659851769:web:4250797c86846921981b28",
+  measurementId: "G-S57L0YME6M"
+};
+
+// Firebase'i başlat
+const app = initializeApp(firebaseConfig);
+
+// Analytics'i başlat
+const analytics = getAnalytics(app);
+
+// Firestore veritabanını başlat
+const db = getFirestore(app);
+
+// Storage'ı başlat
+const storage = getStorage(app);
+
+// Authentication'ı başlat
+const auth = getAuth(app);
 
 // Varsayılan ayarlar
 const defaultSettings = {
@@ -66,7 +95,7 @@ const defaultSettings = {
 };
 
 // Veritabanını başlat
-export const initializeDatabase = async () => {
+const initializeDatabase = async () => {
   try {
     // Settings collection'ı kontrol et
     const settingsDoc = await getDoc(doc(db, 'settings', 'main'));
@@ -96,4 +125,6 @@ export const initializeDatabase = async () => {
     console.error('Error initializing database:', error);
     return false;
   }
-}; 
+};
+
+export { db, storage, auth, analytics, initializeDatabase }; 
