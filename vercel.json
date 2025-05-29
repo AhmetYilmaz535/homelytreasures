@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/"
+      "destination": "/index.html"
     }
   ],
   "buildCommand": "npm run build",
@@ -11,7 +11,20 @@
   "cleanUrls": true,
   "routes": [
     {
-      "handle": "filesystem"
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/products",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/about",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/index.html"
     },
     {
       "src": "/(.*)",
