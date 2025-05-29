@@ -1,4 +1,4 @@
-import { auth, db } from './config';
+import { auth, db } from './index.js';
 import { 
   signInWithEmailAndPassword, 
   signOut,
