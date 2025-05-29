@@ -17,6 +17,7 @@ import AdminPanel from './pages/AdminPanel';
 import Products from './pages/Products';
 import { getSliderSettings } from './utils/imageStore';
 import Footer from './components/Footer';
+import { initializeDatabase } from './firebase/initializeDatabase';
 
 const theme = createTheme({
   palette: {
@@ -192,6 +193,14 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  useEffect(() => {
+    // Firebase veritabanını başlat
+    const initDB = async () => {
+      await initializeDatabase();
+    };
+    initDB();
+  }, []);
+
   return (
     <Router>
       <ThemeProvider theme={theme}>
