@@ -6,13 +6,13 @@ import { getAnalytics } from 'firebase/analytics';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxjlhbXp98gSe73aO5e3elzUmi1XShLmw",
-  authDomain: "thehomelytreasures-85664.firebaseapp.com",
-  projectId: "thehomelytreasures-85664",
-  storageBucket: "thehomelytreasures-85664.firebasestorage.app",
-  messagingSenderId: "997659851769",
-  appId: "1:997659851769:web:4250797c86846921981b28",
-  measurementId: "G-S57L0YME6M"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Firebase'i başlat
