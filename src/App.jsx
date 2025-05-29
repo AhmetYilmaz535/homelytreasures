@@ -17,7 +17,7 @@ import AdminPanel from './pages/AdminPanel';
 import Products from './pages/Products';
 import { getSliderSettings } from './utils/imageStore';
 import Footer from './components/Footer';
-import { initializeDatabase } from './firebase/index.js';
+import { initializeDatabase } from './firebase/initializeDatabase';
 
 const theme = createTheme({
   palette: {
