@@ -1,4 +1,4 @@
-import { db } from './config';
+import { db } from '/src/firebase/config.js';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 // Varsayılan ayarlar
