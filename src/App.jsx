@@ -108,7 +108,6 @@ const Header = () => {
 
   const location = useLocation();
   const isHomePage = location.pathname === '/';
-  const isLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
 
   useEffect(() => {
     const loadSettings = () => {
@@ -151,44 +150,30 @@ const Header = () => {
             >
               Home
             </Button>
-            {isLoggedIn && (
-              <>
-                <Button 
-                  color="primary" 
-                  component={Link} 
-                  to="/settings"
-                  sx={{ borderRadius: 2 }}
-                >
-                  Settings
-                </Button>
-                <Button 
-                  color="primary" 
-                  component={Link} 
-                  to="/products"
-                  sx={{ borderRadius: 2 }}
-                >
-                  Products
-                </Button>
-                <Button 
-                  color="primary" 
-                  component={Link} 
-                  to="/admin"
-                  sx={{ borderRadius: 2 }}
-                >
-                  Admin Panel
-                </Button>
-              </>
-            )}
-            {!isLoggedIn && (
-              <Button 
-                color="primary" 
-                component={Link} 
-                to="/admin-login"
-                sx={{ borderRadius: 2 }}
-              >
-                Admin Login
-              </Button>
-            )}
+            <Button 
+              color="primary" 
+              component={Link} 
+              to="/settings"
+              sx={{ borderRadius: 2 }}
+            >
+              Settings
+            </Button>
+            <Button 
+              color="primary" 
+              component={Link} 
+              to="/products"
+              sx={{ borderRadius: 2 }}
+            >
+              Products
+            </Button>
+            <Button 
+              color="primary" 
+              component={Link} 
+              to="/admin"
+              sx={{ borderRadius: 2 }}
+            >
+              Admin
+            </Button>
           </Box>
         )}
       </Toolbar>
@@ -199,7 +184,7 @@ const Header = () => {
 // Auth guard component
 const ProtectedRoute = ({ children }) => {
   const isLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
-  
+
   if (!isLoggedIn) {
     return <Navigate to="/admin-login" replace />;
   }
