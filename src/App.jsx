@@ -17,7 +17,7 @@ import AdminPanel from './pages/AdminPanel';
 import Products from './pages/Products';
 import { getSliderSettings } from './utils/imageStore';
 import Footer from './components/Footer';
-import { initializeDatabase } from './firebase/initializeDatabase';
+import { initializeDatabase } from './firebase/index.js';
 
 const theme = createTheme({
   palette: {
@@ -184,7 +184,7 @@ const Header = () => {
 // Auth guard component
 const ProtectedRoute = ({ children }) => {
   const isLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
-
+  
   if (!isLoggedIn) {
     return <Navigate to="/admin-login" replace />;
   }
