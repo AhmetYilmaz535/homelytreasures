@@ -6,5 +6,16 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    rollupOptions: {
+      external: ['@emotion/react/jsx-runtime'],
+    }
+  },
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
+  optimizeDeps: {
+    include: ['@emotion/react', '@emotion/styled', '@mui/material']
   }
 });
