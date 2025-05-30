@@ -1,4 +1,4 @@
-import { db } from '@firebase/config';
+import { db } from './config';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 export const initializeDatabase = async () => {

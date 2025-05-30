@@ -1,4 +1,4 @@
-import { db, storage } from '@firebase/config';
+import { db, storage } from './config';
 import { 
   collection, 
   addDoc, 

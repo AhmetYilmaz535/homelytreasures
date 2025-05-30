@@ -7,6 +7,7 @@ export default defineConfig({
   root: '.',
   resolve: {
     alias: {
+      '@': path.resolve(__dirname, './src'),
       '@firebase': path.resolve(__dirname, './src/firebase')
     }
   }
