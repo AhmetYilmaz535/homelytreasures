@@ -1,16 +1,11 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
+  "version": 2,
   "routes": [
-    { "handle": "filesystem" },
-    { "src": "/admin", "dest": "/index.html" },
-    { "src": "/products", "dest": "/index.html" },
-    { "src": "/settings", "dest": "/index.html" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
   ],
   "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "cleanUrls": true
+  "outputDirectory": "dist"
 } 
