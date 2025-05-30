@@ -1,5 +1,5 @@
 import { db } from './config';
-import { collection, doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 export const initializeDatabase = async () => {
   try {
@@ -25,25 +25,6 @@ export const initializeDatabase = async () => {
         featuredProducts: []
       });
     }
-
-    // Check if admin user exists
-    const adminRef = doc(db, 'users', 'admin');
-    const adminDoc = await getDoc(adminRef);
-
-    if (!adminDoc.exists()) {
-      // Initialize admin user
-      await setDoc(adminRef, {
-        email: 'admin@example.com',
-        role: 'admin',
-        createdAt: new Date()
-      });
-    }
-
-    // Initialize other collections if needed
-    const usersRef = collection(db, 'users');
-    const productsRef = collection(db, 'products');
-
-    console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
   }
