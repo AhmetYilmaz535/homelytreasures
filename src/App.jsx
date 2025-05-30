@@ -108,6 +108,7 @@ const Header = () => {
 
   const location = useLocation();
   const isHomePage = location.pathname === '/';
+  const isLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
 
   useEffect(() => {
     const loadSettings = () => {
@@ -150,30 +151,44 @@ const Header = () => {
             >
               Home
             </Button>
-            <Button 
-              color="primary" 
-              component={Link} 
-              to="/settings"
-              sx={{ borderRadius: 2 }}
-            >
-              Settings
-            </Button>
-            <Button 
-              color="primary" 
-              component={Link} 
-              to="/products"
-              sx={{ borderRadius: 2 }}
-            >
-              Products
-            </Button>
-            <Button 
-              color="primary" 
-              component={Link} 
-              to="/admin"
-              sx={{ borderRadius: 2 }}
-            >
-              Admin
-            </Button>
+            {isLoggedIn && (
+              <>
+                <Button 
+                  color="primary" 
+                  component={Link} 
+                  to="/settings"
+                  sx={{ borderRadius: 2 }}
+                >
+                  Settings
+                </Button>
+                <Button 
+                  color="primary" 
+                  component={Link} 
+                  to="/products"
+                  sx={{ borderRadius: 2 }}
+                >
+                  Products
+                </Button>
+                <Button 
+                  color="primary" 
+                  component={Link} 
+                  to="/admin"
+                  sx={{ borderRadius: 2 }}
+                >
+                  Admin Panel
+                </Button>
+              </>
+            )}
+            {!isLoggedIn && (
+              <Button 
+                color="primary" 
+                component={Link} 
+                to="/admin-login"
+                sx={{ borderRadius: 2 }}
+              >
+                Admin Login
+              </Button>
+            )}
           </Box>
         )}
       </Toolbar>
