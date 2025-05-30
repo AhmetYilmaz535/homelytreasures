@@ -4,11 +4,9 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  root: '.',
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@firebase': path.resolve(__dirname, './src/firebase')
+      '@': path.resolve(__dirname, './src')
     }
   }
 });
