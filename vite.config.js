@@ -25,8 +25,5 @@ export default defineConfig({
       '@mui/icons-material'
     ],
     exclude: ['@emotion/react/jsx-runtime']
-  },
-  esbuild: {
-    jsxInject: `import React from 'react'`
   }
 });
