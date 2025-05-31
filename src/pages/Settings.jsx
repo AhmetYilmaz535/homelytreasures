@@ -37,9 +37,9 @@ import {
   updateImageOrder,
   getSliderSettings,
   updateSliderSettings,
-  deleteImage,
-  checkFirebaseConnection
+  deleteImage
 } from '../utils/imageStore';
+import { checkFirebaseConnection } from '../firebase';
 
 const SettingsSection = ({ title, children }) => (
   <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
