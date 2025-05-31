@@ -1,3 +1,20 @@
+import { db, storage } from '../firebase';
+import { 
+  collection, 
+  getDocs, 
+  doc, 
+  setDoc, 
+  deleteDoc,
+  query,
+  orderBy 
+} from 'firebase/firestore';
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
+} from 'firebase/storage';
+
 // Varsayılan resimler
 const defaultImages = [
   { id: 1, path: '/images/ana1.jpg', order: 1 },
@@ -93,51 +110,71 @@ const defaultSettings = {
 };
 
 // Tüm resimleri al
-export const getAllAvailableImages = () => {
+export const getAllAvailableImages = async () => {
   try {
-    const images = localStorage.getItem('availableImages');
-    return images ? JSON.parse(images) : defaultImages;
+    const imagesRef = collection(db, 'images');
+    const q = query(imagesRef, orderBy('order', 'asc'));
+    const snapshot = await getDocs(q);
+    const images = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    return images;
   } catch (error) {
     console.error('Error getting available images:', error);
-    return defaultImages;
+    return [];
   }
 };
 
 // Seçili resimleri al
-export const getSelectedImages = () => {
+export const getSelectedImages = async () => {
   try {
-    const images = localStorage.getItem('selectedImages');
-    return images ? JSON.parse(images) : defaultImages;
+    const imagesRef = collection(db, 'selectedImages');
+    const snapshot = await getDocs(imagesRef);
+    const images = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    return images;
   } catch (error) {
     console.error('Error getting selected images:', error);
-    return defaultImages;
+    return [];
   }
 };
 
-// Seçili resimleri localStorage'a kaydet
-export const saveSelectedImages = (images) => {
+// Seçili resimleri kaydet
+export const saveSelectedImages = async (images) => {
   try {
-    localStorage.setItem('selectedImages', JSON.stringify(images));
+    // Önce mevcut seçili resimleri temizle
+    const snapshot = await getDocs(collection(db, 'selectedImages'));
+    const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+
+    // Yeni seçili resimleri kaydet
+    const savePromises = images.map(image => 
+      setDoc(doc(db, 'selectedImages', image.id), image)
+    );
+    await Promise.all(savePromises);
+
     window.dispatchEvent(new Event('settingsChanged'));
   } catch (error) {
     console.error('Error saving images:', error);
+    throw error;
   }
 };
 
 // Resim sil
-export const deleteImage = (imageId) => {
+export const deleteImage = async (imageId) => {
   try {
-    // Mevcut resimleri al
-    const currentImages = getAllAvailableImages();
-    const selectedImages = getSelectedImages();
+    // Firestore'dan resmi sil
+    await deleteDoc(doc(db, 'images', imageId));
     
-    // Resmi mevcut resimlerden kaldır
-    const updatedImages = currentImages.filter(img => img.id !== imageId);
-    localStorage.setItem('availableImages', JSON.stringify(updatedImages));
+    // Storage'dan resmi sil
+    const imageRef = ref(storage, `images/${imageId}`);
+    await deleteObject(imageRef);
     
     // Seçili resimlerden de kaldır
-    const updatedSelectedImages = selectedImages.filter(img => img.id !== imageId);
-    saveSelectedImages(updatedSelectedImages);
+    await deleteDoc(doc(db, 'selectedImages', imageId));
     
     window.dispatchEvent(new Event('settingsChanged'));
     return true;
@@ -150,38 +187,37 @@ export const deleteImage = (imageId) => {
 // Yeni resim ekle
 export const addCustomImage = async (file) => {
   try {
-    const currentImages = getAllAvailableImages();
-    const selectedImages = getSelectedImages();
+    const currentImages = await getAllAvailableImages();
     
     // Maksimum resim sayısı kontrolü
     if (currentImages.length >= MAX_IMAGES) {
       throw new Error(`Maksimum ${MAX_IMAGES} resim yükleyebilirsiniz!`);
     }
+
+    const imageId = Date.now().toString();
     
-    const reader = new FileReader();
-    return new Promise((resolve, reject) => {
-      reader.onload = () => {
-        const newImage = {
-          id: Date.now(),
-          path: reader.result,
-          order: currentImages.length + 1,
-          url: reader.result
-        };
-        
-        // Mevcut resimlere ekle
-        const updatedImages = [...currentImages, newImage];
-        localStorage.setItem('availableImages', JSON.stringify(updatedImages));
-        
-        // Seçili resimlere ekle
-        const updatedSelectedImages = [...selectedImages, newImage];
-        saveSelectedImages(updatedSelectedImages);
-        
-        window.dispatchEvent(new Event('settingsChanged'));
-        resolve(newImage);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+    // Storage'a resmi yükle
+    const storageRef = ref(storage, `images/${imageId}`);
+    await uploadBytes(storageRef, file);
+    
+    // Yüklenen resmin URL'ini al
+    const imageUrl = await getDownloadURL(storageRef);
+    
+    const newImage = {
+      id: imageId,
+      path: imageUrl,
+      url: imageUrl,
+      order: currentImages.length + 1
+    };
+    
+    // Firestore'a resim bilgilerini kaydet
+    await setDoc(doc(db, 'images', imageId), newImage);
+    
+    // Seçili resimlere ekle
+    await setDoc(doc(db, 'selectedImages', imageId), newImage);
+    
+    window.dispatchEvent(new Event('settingsChanged'));
+    return newImage;
   } catch (error) {
     console.error('Error adding image:', error);
     throw error;
@@ -189,46 +225,45 @@ export const addCustomImage = async (file) => {
 };
 
 // Slider ayarlarını al
-export const getSliderSettings = () => {
+export const getSliderSettings = async () => {
   try {
-    const settings = localStorage.getItem('sliderSettings');
-    const parsedSettings = settings ? JSON.parse(settings) : defaultSettings;
+    const settingsDoc = await getDocs(collection(db, 'settings'));
+    const settings = settingsDoc.docs[0]?.data() || defaultSettings;
     
     // Seçili resimleri ayarlara ekle
-    const selectedImages = getSelectedImages();
+    const selectedImages = await getSelectedImages();
     return {
-      ...parsedSettings,
-      images: selectedImages.map(img => ({
-        ...img,
-        url: img.path // Ana sayfada görüntüleme için url özelliği eklendi
-      }))
+      ...settings,
+      images: selectedImages
     };
   } catch (error) {
     console.error('Error getting settings:', error);
     return {
       ...defaultSettings,
-      images: defaultImages.map(img => ({
-        ...img,
-        url: img.path
-      }))
+      images: []
     };
   }
 };
 
 // Slider ayarlarını güncelle
-export const updateSliderSettings = (newSettings) => {
+export const updateSliderSettings = async (newSettings) => {
   try {
-    localStorage.setItem('sliderSettings', JSON.stringify(newSettings));
+    await setDoc(doc(db, 'settings', 'sliderSettings'), newSettings);
     window.dispatchEvent(new Event('settingsChanged'));
   } catch (error) {
     console.error('Error updating settings:', error);
+    throw error;
   }
 };
 
 // Resim sırasını güncelle
-export const updateImageOrder = (images) => {
+export const updateImageOrder = async (images) => {
   try {
-    localStorage.setItem('availableImages', JSON.stringify(images));
+    const updatePromises = images.map((image, index) => {
+      const updatedImage = { ...image, order: index + 1 };
+      return setDoc(doc(db, 'images', image.id), updatedImage);
+    });
+    await Promise.all(updatePromises);
     return images;
   } catch (error) {
     console.error('Error updating image order:', error);
