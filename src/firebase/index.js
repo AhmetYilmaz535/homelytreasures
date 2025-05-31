@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
 import { getAnalytics } from 'firebase/analytics';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
@@ -41,13 +41,6 @@ const initializeFirebase = () => {
       analytics = getAnalytics(app);
     }
 
-    // Geliştirme ortamında emülatörleri kullan
-    if (import.meta.env.DEV) {
-      connectFirestoreEmulator(db, 'localhost', 8080);
-      connectStorageEmulator(storage, 'localhost', 9199);
-      connectAuthEmulator(auth, 'http://localhost:9099');
-    }
-
     // Offline persistence'ı etkinleştir
     if (typeof window !== 'undefined') {
       enableIndexedDbPersistence(db).catch((err) => {
@@ -67,33 +60,6 @@ const initializeFirebase = () => {
   }
 };
 
-// Firebase bağlantı durumunu kontrol et
-const checkFirebaseConnection = async () => {
-  if (!db) {
-    const isInitialized = initializeFirebase();
-    if (!isInitialized) {
-      throw new Error('Firebase initialization failed');
-    }
-  }
-  
-  try {
-    // Test dokümanı oluştur
-    const testDoc = doc(db, '_connection_test', 'test');
-    await setDoc(testDoc, { timestamp: new Date() });
-    
-    // Test dokümanını oku
-    const docSnap = await getDoc(testDoc);
-    if (!docSnap.exists()) {
-      throw new Error('Test document not found');
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Firebase connection test failed:', error);
-    throw new Error('Firebase connection failed: ' + error.message);
-  }
-};
-
 // Veritabanını başlat
 const initializeDatabase = async () => {
   try {
@@ -103,9 +69,6 @@ const initializeDatabase = async () => {
       throw new Error('Firebase initialization failed');
     }
 
-    // Firebase bağlantısını kontrol et
-    await checkFirebaseConnection();
-
     // Settings collection'ı kontrol et
     const settingsDoc = await getDoc(doc(db, 'settings', 'sliderSettings'));
     if (!settingsDoc.exists()) {
@@ -113,14 +76,6 @@ const initializeDatabase = async () => {
       await setDoc(doc(db, 'settings', 'sliderSettings'), defaultSettings);
       console.log('Default settings created');
     }
-
-    // Images collection'ını oluştur
-    const imagesCollectionRef = doc(db, 'images', '_init');
-    await setDoc(imagesCollectionRef, { initialized: true }, { merge: true });
-
-    // SelectedImages collection'ını oluştur
-    const selectedImagesCollectionRef = doc(db, 'selectedImages', '_init');
-    await setDoc(selectedImagesCollectionRef, { initialized: true }, { merge: true });
 
     console.log('Database initialized successfully');
     return true;
@@ -200,8 +155,6 @@ export {
   db, 
   storage, 
   auth, 
-  analytics, 
-  initializeDatabase,
-  checkFirebaseConnection,
-  initializeFirebase
+  analytics,
+  initializeDatabase 
 }; 
