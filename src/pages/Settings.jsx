@@ -39,7 +39,6 @@ import {
   updateSliderSettings,
   deleteImage
 } from '../utils/imageStore';
-import { checkFirebaseConnection } from '../firebase/index.js';
 
 const SettingsSection = ({ title, children }) => (
   <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
@@ -79,12 +78,6 @@ const Settings = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        // Önce Firebase bağlantısını kontrol et
-        const isConnected = await checkFirebaseConnection();
-        if (!isConnected) {
-          throw new Error('Firebase bağlantısı kurulamadı');
-        }
-
         // Verileri yükle
         const [images, sliderSettings] = await Promise.all([
           getAllAvailableImages(),
