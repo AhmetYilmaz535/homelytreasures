@@ -12,8 +12,10 @@ import {
   ref,
   uploadBytes,
   getDownloadURL,
-  deleteObject
+  deleteObject,
+  uploadBytesResumable
 } from 'firebase/storage';
+import imageCompression from 'browser-image-compression';
 
 // Varsayılan resimler
 const defaultImages = [
@@ -200,7 +202,7 @@ export const addCustomImage = async (file) => {
     }
 
     // Dosya boyutu kontrolü (5MB)
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       throw new Error('Resim boyutu 5MB\'dan büyük olamaz!');
     }
@@ -210,57 +212,89 @@ export const addCustomImage = async (file) => {
     // Storage'a resmi yükle
     const storageRef = ref(storage, `images/${imageId}`);
     
-    try {
-      const uploadResult = await uploadBytes(storageRef, file);
-      if (!uploadResult) {
-        throw new Error('Resim yüklenemedi!');
+    // Resim sıkıştırma işlemi
+    let compressedFile = file;
+    if (file.size > 1024 * 1024) { // 1MB'dan büyükse sıkıştır
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true
+      };
+      try {
+        compressedFile = await imageCompression(file, options);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        compressedFile = file; // Sıkıştırma başarısız olursa orijinal dosyayı kullan
       }
-    } catch (uploadError) {
-      console.error('Upload error:', uploadError);
-      throw new Error('Resim yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
-    }
-    
-    let imageUrl;
-    try {
-      imageUrl = await getDownloadURL(storageRef);
-      if (!imageUrl) {
-        throw new Error('Resim URL\'i alınamadı!');
-      }
-    } catch (urlError) {
-      console.error('URL error:', urlError);
-      throw new Error('Resim URL\'i alınırken bir hata oluştu. Lütfen tekrar deneyin.');
     }
 
-    const newImage = {
-      id: imageId,
-      path: imageUrl,
-      url: imageUrl,
-      order: currentImages.length + 1,
-      createdAt: new Date().toISOString(),
-      fileName: file.name
-    };
-    
-    // Firestore'a resim bilgilerini kaydet
-    try {
-      await setDoc(doc(db, 'images', imageId), newImage);
-      await setDoc(doc(db, 'selectedImages', imageId), newImage);
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      // Yüklenen resmi sil
-      try {
-        await deleteObject(storageRef);
-      } catch (deleteError) {
-        console.error('Error deleting uploaded image:', deleteError);
-      }
-      throw new Error('Resim bilgileri kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
-    }
-    
-    window.dispatchEvent(new Event('settingsChanged'));
-    return newImage;
+    // Upload işlemi
+    const uploadTask = uploadBytesResumable(storageRef, compressedFile);
+
+    // Upload progress
+    await new Promise((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          window.dispatchEvent(new CustomEvent('uploadProgress', { detail: progress }));
+        },
+        (error) => {
+          console.error('Upload error:', error);
+          reject(new Error('Resim yüklenirken bir hata oluştu!'));
+        },
+        async () => {
+          try {
+            const imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
+            if (!imageUrl) {
+              throw new Error('Resim URL\'i alınamadı!');
+            }
+
+            const newImage = {
+              id: imageId,
+              path: imageUrl,
+              url: imageUrl,
+              order: currentImages.length + 1,
+              createdAt: new Date().toISOString(),
+              fileName: file.name,
+              size: compressedFile.size,
+              originalSize: file.size,
+              dimensions: await getImageDimensions(file)
+            };
+
+            // Firestore'a resim bilgilerini kaydet
+            await setDoc(doc(db, 'images', imageId), newImage);
+            await setDoc(doc(db, 'selectedImages', imageId), newImage);
+
+            window.dispatchEvent(new Event('settingsChanged'));
+            resolve(newImage);
+          } catch (error) {
+            console.error('Error finalizing upload:', error);
+            reject(error);
+          }
+        }
+      );
+    });
+
+    return true;
   } catch (error) {
     console.error('Error adding image:', error);
     throw error;
   }
+};
+
+// Resim boyutlarını al
+const getImageDimensions = (file) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      resolve({
+        width: img.width,
+        height: img.height
+      });
+    };
+    img.src = URL.createObjectURL(file);
+  });
 };
 
 // Slider ayarlarını al

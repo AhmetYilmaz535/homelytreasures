@@ -20,7 +20,8 @@ import {
   DialogContent,
   DialogActions,
   Slider as MuiSlider,
-  TextField
+  TextField,
+  LinearProgress
 } from '@mui/material';
 import {
   ArrowUpward as ArrowUpIcon,
@@ -54,6 +55,7 @@ const Settings = () => {
   const [selectedImages, setSelectedImages] = useState([]);
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -64,16 +66,17 @@ const Settings = () => {
     image: null
   });
 
-  const showSuccessMessage = (message) => {
+  const showMessage = (message, severity = 'success') => {
     setSnackbar({
       open: true,
       message,
-      severity: 'success'
+      severity
     });
   };
 
   useEffect(() => {
     const loadData = async () => {
+      setLoading(true);
       try {
         const [images, selected, sliderSettings] = await Promise.all([
           getAllAvailableImages(),
@@ -85,21 +88,29 @@ const Settings = () => {
         setSettings(sliderSettings);
       } catch (error) {
         console.error('Error loading data:', error);
-        setSnackbar({
-          open: true,
-          message: 'Veriler yüklenirken bir hata oluştu!',
-          severity: 'error'
-        });
+        showMessage('Veriler yüklenirken bir hata oluştu!', 'error');
+      } finally {
+        setLoading(false);
       }
     };
+
     loadData();
 
-    // Settings değişikliklerini dinle
-    const handleSettingsChange = async () => {
+    const handleSettingsChange = () => {
       loadData();
     };
+
+    const handleUploadProgress = (event) => {
+      setUploadProgress(event.detail);
+    };
+
     window.addEventListener('settingsChanged', handleSettingsChange);
-    return () => window.removeEventListener('settingsChanged', handleSettingsChange);
+    window.addEventListener('uploadProgress', handleUploadProgress);
+    
+    return () => {
+      window.removeEventListener('settingsChanged', handleSettingsChange);
+      window.removeEventListener('uploadProgress', handleUploadProgress);
+    };
   }, []);
 
   const handleImageToggle = async (image) => {
@@ -109,11 +120,7 @@ const Settings = () => {
         if (selectedImages.length > 1) {
           newSelection = selectedImages.filter(img => img.id !== image.id);
         } else {
-          setSnackbar({
-            open: true,
-            message: 'En az bir resim seçili olmalıdır!',
-            severity: 'error'
-          });
+          showMessage('En az bir resim seçili olmalıdır!', 'error');
           return;
         }
       } else {
@@ -122,14 +129,10 @@ const Settings = () => {
       
       await saveSelectedImages(newSelection);
       setSelectedImages(newSelection);
-      showSuccessMessage('Değişiklikler kaydedildi!');
+      showMessage('Değişiklikler kaydedildi!');
     } catch (error) {
       console.error('Error toggling image:', error);
-      setSnackbar({
-        open: true,
-        message: 'Değişiklikler kaydedilirken bir hata oluştu!',
-        severity: 'error'
-      });
+      showMessage('Değişiklikler kaydedilirken bir hata oluştu!', 'error');
     }
   };
 
@@ -143,14 +146,10 @@ const Settings = () => {
       }
       const updatedImages = await updateImageOrder(items);
       setAllImages(updatedImages);
-      showSuccessMessage('Sıralama güncellendi!');
+      showMessage('Sıralama güncellendi!');
     } catch (error) {
       console.error('Error moving image:', error);
-      setSnackbar({
-        open: true,
-        message: 'Sıralama güncellenirken bir hata oluştu!',
-        severity: 'error'
-      });
+      showMessage('Sıralama güncellenirken bir hata oluştu!', 'error');
     }
   };
 
@@ -158,34 +157,49 @@ const Settings = () => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Dosya tipi kontrolü
     if (!file.type.startsWith('image/')) {
-      setSnackbar({
-        open: true,
-        message: 'Lütfen geçerli bir resim dosyası seçin!',
-        severity: 'error'
-      });
+      showMessage('Lütfen geçerli bir resim dosyası seçin!', 'error');
+      return;
+    }
+
+    // Dosya boyutu kontrolü (5MB)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      showMessage('Resim boyutu 5MB\'dan büyük olamaz!', 'error');
       return;
     }
 
     setLoading(true);
+    setUploadProgress(0);
+
     try {
+      // Mevcut resim sayısını kontrol et
+      const currentImages = await getAllAvailableImages();
+      if (currentImages.length >= 10) {
+        throw new Error('Maksimum 10 resim yükleyebilirsiniz!');
+      }
+
+      // Resmi yükle
       const newImage = await addCustomImage(file);
-      const images = await getAllAvailableImages();
-      setAllImages(images);
-      showSuccessMessage('Resim başarıyla yüklendi!');
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      setSnackbar({
-        open: true,
-        message: error.message || 'Resim yüklenirken bir hata oluştu!',
-        severity: 'error'
-      });
-    } finally {
-      setLoading(false);
+      
+      // Resim listesini güncelle
+      const updatedImages = await getAllAvailableImages();
+      setAllImages(updatedImages);
+      
+      // Başarı mesajı göster
+      showMessage('Resim başarıyla yüklendi!');
+      
       // Input'u temizle
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      showMessage(error.message || 'Resim yüklenirken bir hata oluştu!', 'error');
+    } finally {
+      setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -199,14 +213,10 @@ const Settings = () => {
       }
       setSettings(newSettings);
       await updateSliderSettings(newSettings);
-      showSuccessMessage('Ayarlar güncellendi!');
+      showMessage('Ayarlar güncellendi!');
     } catch (error) {
       console.error('Error updating settings:', error);
-      setSnackbar({
-        open: true,
-        message: 'Ayarlar güncellenirken bir hata oluştu!',
-        severity: 'error'
-      });
+      showMessage('Ayarlar güncellenirken bir hata oluştu!', 'error');
     }
   };
 
@@ -221,15 +231,11 @@ const Settings = () => {
           ]);
           setAllImages(images);
           setSelectedImages(selected);
-          showSuccessMessage('Resim başarıyla silindi!');
+          showMessage('Resim başarıyla silindi!');
         }
       } catch (error) {
         console.error('Error deleting image:', error);
-        setSnackbar({
-          open: true,
-          message: 'Resim silinirken bir hata oluştu!',
-          severity: 'error'
-        });
+        showMessage('Resim silinirken bir hata oluştu!', 'error');
       }
     }
   };
@@ -239,15 +245,28 @@ const Settings = () => {
   return (
     <Box>
       <SettingsSection title="Slider Resimleri">
-        <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => fileInputRef.current.click()}
-            disabled={loading}
-          >
-            {loading ? 'Yükleniyor...' : 'Yeni Resim Yükle'}
-          </Button>
+        <Box sx={{ mb: 3 }}>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => fileInputRef.current.click()}
+              disabled={loading || allImages.length >= 10}
+            >
+              {loading ? 'Yükleniyor...' : 'Yeni Resim Yükle'}
+            </Button>
+            <Typography variant="body2" color="text.secondary">
+              {allImages.length}/10 resim
+            </Typography>
+          </Box>
+          {loading && uploadProgress > 0 && (
+            <Box sx={{ width: '100%', mt: 2 }}>
+              <LinearProgress variant="determinate" value={uploadProgress} />
+              <Typography variant="body2" color="text.secondary" align="center">
+                %{Math.round(uploadProgress)}
+              </Typography>
+            </Box>
+          )}
           <input
             type="file"
             ref={fileInputRef}
@@ -358,7 +377,7 @@ const Settings = () => {
               };
               setSettings(newSettings);
               updateSliderSettings(newSettings);
-              showSuccessMessage('Ayarlar güncellendi!');
+              showMessage('Ayarlar güncellendi!');
             }}
             min={100}
             max={150}

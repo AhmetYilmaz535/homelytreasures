@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 import { getAnalytics } from 'firebase/analytics';
@@ -15,23 +15,59 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Firebase'i başlat
-const app = initializeApp(firebaseConfig);
+let app;
+let db;
+let storage;
+let auth;
+let analytics;
 
-// Analytics'i başlat
-const analytics = getAnalytics(app);
+try {
+  // Firebase'i başlat
+  app = initializeApp(firebaseConfig);
+  
+  // Firestore veritabanını başlat
+  db = getFirestore(app);
+  
+  // Storage'ı başlat
+  storage = getStorage(app);
+  
+  // Authentication'ı başlat
+  auth = getAuth(app);
+  
+  // Analytics'i başlat
+  analytics = getAnalytics(app);
 
-// Firestore veritabanını başlat
-const db = getFirestore(app);
+  // Offline persistence'ı etkinleştir
+  enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.error('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+    } else if (err.code === 'unimplemented') {
+      console.error('The current browser doesn\'t support all of the features required to enable persistence');
+    }
+  });
 
-// Storage'ı başlat
-const storage = getStorage(app);
-if (!storage) {
-  console.error('Firebase Storage initialization failed');
+  console.log('Firebase initialized successfully');
+} catch (error) {
+  console.error('Error initializing Firebase:', error);
+  throw new Error('Firebase initialization failed');
 }
 
-// Authentication'ı başlat
-const auth = getAuth(app);
+// Firebase bağlantı durumunu kontrol et
+const checkFirebaseConnection = async () => {
+  if (!db) {
+    throw new Error('Firestore is not initialized');
+  }
+  
+  try {
+    const testDoc = doc(db, '_connection_test', 'test');
+    await setDoc(testDoc, { timestamp: new Date() });
+    await getDoc(testDoc);
+    return true;
+  } catch (error) {
+    console.error('Firebase connection test failed:', error);
+    return false;
+  }
+};
 
 // Varsayılan ayarlar
 const defaultSettings = {
@@ -100,6 +136,12 @@ const defaultSettings = {
 // Veritabanını başlat
 const initializeDatabase = async () => {
   try {
+    // Firebase bağlantısını kontrol et
+    const isConnected = await checkFirebaseConnection();
+    if (!isConnected) {
+      throw new Error('Firebase connection failed');
+    }
+
     // Settings collection'ı kontrol et
     const settingsDoc = await getDoc(doc(db, 'settings', 'main'));
     if (!settingsDoc.exists()) {
@@ -108,21 +150,15 @@ const initializeDatabase = async () => {
       console.log('Default settings created');
     }
 
-    // Products collection'ı için örnek ürün
-    const sampleProductDoc = await getDoc(doc(db, 'products', 'sample'));
-    if (!sampleProductDoc.exists()) {
-      // Örnek ürün yoksa oluştur
-      await setDoc(doc(db, 'products', 'sample'), {
-        name: 'Sample Product',
-        description: 'This is a sample product description.',
-        images: [],
-        isActive: true,
-        amazonLink: '',
-        createdAt: new Date()
-      });
-      console.log('Sample product created');
-    }
+    // Images collection'ını oluştur
+    const imagesCollectionRef = doc(db, 'images', '_init');
+    await setDoc(imagesCollectionRef, { initialized: true }, { merge: true });
 
+    // SelectedImages collection'ını oluştur
+    const selectedImagesCollectionRef = doc(db, 'selectedImages', '_init');
+    await setDoc(selectedImagesCollectionRef, { initialized: true }, { merge: true });
+
+    console.log('Database initialized successfully');
     return true;
   } catch (error) {
     console.error('Error initializing database:', error);
@@ -130,4 +166,12 @@ const initializeDatabase = async () => {
   }
 };
 
-export { db, storage, auth, analytics, initializeDatabase }; 
+export { 
+  app, 
+  db, 
+  storage, 
+  auth, 
+  analytics, 
+  initializeDatabase,
+  checkFirebaseConnection 
+}; 
