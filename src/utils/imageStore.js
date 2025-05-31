@@ -98,7 +98,7 @@ export const getAllAvailableImages = () => {
     const images = localStorage.getItem('availableImages');
     return images ? JSON.parse(images) : defaultImages;
   } catch (error) {
-    console.error('Error getting images:', error);
+    console.error('Error getting available images:', error);
     return defaultImages;
   }
 };
