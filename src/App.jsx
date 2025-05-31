@@ -204,22 +204,16 @@ function App() {
   useEffect(() => {
     const initApp = async () => {
       try {
-        // Firebase bağlantısını kontrol et
-        const isConnected = await checkFirebaseConnection();
-        if (!isConnected) {
-          throw new Error('Firebase bağlantısı kurulamadı');
-        }
-
-        // Veritabanını başlat
+        // Firebase'i başlat
         const isInitialized = await initializeDatabase();
         if (!isInitialized) {
-          throw new Error('Veritabanı başlatılamadı');
+          throw new Error('Firebase başlatılamadı');
         }
 
         setLoading(false);
       } catch (error) {
         console.error('App initialization error:', error);
-        setError(error.message);
+        setError(error.message || 'Bir hata oluştu. Lütfen sayfayı yenileyin.');
         setLoading(false);
       }
     };
@@ -231,11 +225,16 @@ function App() {
     return (
       <Box sx={{ 
         display: 'flex', 
+        flexDirection: 'column',
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: '100vh' 
+        height: '100vh',
+        gap: 2
       }}>
         <CircularProgress />
+        <Typography variant="body1" color="text.secondary">
+          Yükleniyor...
+        </Typography>
       </Box>
     );
   }
@@ -244,13 +243,37 @@ function App() {
     return (
       <Box sx={{ 
         display: 'flex', 
+        flexDirection: 'column',
         justifyContent: 'center', 
         alignItems: 'center', 
         height: '100vh',
-        p: 3 
+        p: 3,
+        gap: 2
       }}>
-        <Alert severity="error" sx={{ width: '100%', maxWidth: 600 }}>
-          {error}
+        <Alert 
+          severity="error" 
+          sx={{ 
+            width: '100%', 
+            maxWidth: 600,
+            '& .MuiAlert-message': {
+              width: '100%'
+            }
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Bağlantı Hatası
+          </Typography>
+          <Typography variant="body1">
+            {error}
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => window.location.reload()}
+            sx={{ mt: 2 }}
+          >
+            Yeniden Dene
+          </Button>
         </Alert>
       </Box>
     );
