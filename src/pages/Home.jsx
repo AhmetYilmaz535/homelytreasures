@@ -22,16 +22,20 @@ const Home = () => {
   });
 
   useEffect(() => {
-    const loadSettings = () => {
-      const sliderSettings = getSliderSettings();
-      if (sliderSettings?.texts) {
-        setSettings(prev => ({
-          ...prev,
-          texts: {
-            ...prev.texts,
-            ...sliderSettings.texts
-          }
-        }));
+    const loadSettings = async () => {
+      try {
+        const sliderSettings = await getSliderSettings();
+        if (sliderSettings?.texts) {
+          setSettings(prev => ({
+            ...prev,
+            texts: {
+              ...prev.texts,
+              ...sliderSettings.texts
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
       }
     };
 

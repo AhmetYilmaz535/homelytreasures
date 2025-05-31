@@ -14,13 +14,17 @@ const ImageSlider = () => {
   });
 
   useEffect(() => {
-    const loadSettings = () => {
-      const sliderSettings = getSliderSettings();
-      if (sliderSettings) {
-        setSettings(prev => ({
-          ...prev,
-          ...sliderSettings
-        }));
+    const loadSettings = async () => {
+      try {
+        const sliderSettings = await getSliderSettings();
+        if (sliderSettings) {
+          setSettings(prev => ({
+            ...prev,
+            ...sliderSettings
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading slider settings:', error);
       }
     };
 

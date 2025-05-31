@@ -199,21 +199,36 @@ export const addCustomImage = async (file) => {
       throw new Error('Geçersiz resim dosyası!');
     }
 
+    // Dosya boyutu kontrolü (5MB)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('Resim boyutu 5MB\'dan büyük olamaz!');
+    }
+
     const imageId = Date.now().toString();
     
     // Storage'a resmi yükle
     const storageRef = ref(storage, `images/${imageId}`);
-    const uploadResult = await uploadBytes(storageRef, file);
     
-    if (!uploadResult) {
-      throw new Error('Resim yüklenemedi!');
+    try {
+      const uploadResult = await uploadBytes(storageRef, file);
+      if (!uploadResult) {
+        throw new Error('Resim yüklenemedi!');
+      }
+    } catch (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw new Error('Resim yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
     }
     
-    // Yüklenen resmin URL'ini al
-    const imageUrl = await getDownloadURL(storageRef);
-    
-    if (!imageUrl) {
-      throw new Error('Resim URL\'i alınamadı!');
+    let imageUrl;
+    try {
+      imageUrl = await getDownloadURL(storageRef);
+      if (!imageUrl) {
+        throw new Error('Resim URL\'i alınamadı!');
+      }
+    } catch (urlError) {
+      console.error('URL error:', urlError);
+      throw new Error('Resim URL\'i alınırken bir hata oluştu. Lütfen tekrar deneyin.');
     }
 
     const newImage = {
@@ -221,14 +236,24 @@ export const addCustomImage = async (file) => {
       path: imageUrl,
       url: imageUrl,
       order: currentImages.length + 1,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      fileName: file.name
     };
     
     // Firestore'a resim bilgilerini kaydet
-    await setDoc(doc(db, 'images', imageId), newImage);
-    
-    // Seçili resimlere ekle
-    await setDoc(doc(db, 'selectedImages', imageId), newImage);
+    try {
+      await setDoc(doc(db, 'images', imageId), newImage);
+      await setDoc(doc(db, 'selectedImages', imageId), newImage);
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      // Yüklenen resmi sil
+      try {
+        await deleteObject(storageRef);
+      } catch (deleteError) {
+        console.error('Error deleting uploaded image:', deleteError);
+      }
+      throw new Error('Resim bilgileri kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
+    }
     
     window.dispatchEvent(new Event('settingsChanged'));
     return newImage;
