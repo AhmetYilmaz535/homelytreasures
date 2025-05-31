@@ -8,7 +8,9 @@ import {
   Button, 
   Container, 
   CssBaseline,
-  Box
+  Box,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import Home from './pages/Home';
 import Settings from './pages/Settings';
@@ -17,10 +19,11 @@ import AdminPanel from './pages/AdminPanel';
 import Products from './pages/Products';
 import { getSliderSettings } from './utils/imageStore';
 import Footer from './components/Footer';
-import { initializeDatabase } from './firebase/index.js';
+import { initializeDatabase, checkFirebaseConnection } from './firebase';
 import { auth, db } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
+import Layout from './components/Layout';
 
 const theme = createTheme({
   palette: {
@@ -196,39 +199,63 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    // Firebase veritabanını başlat
-    const initDB = async () => {
-      await initializeDatabase();
-    };
-    initDB();
+    const initApp = async () => {
+      try {
+        // Firebase bağlantısını kontrol et
+        const isConnected = await checkFirebaseConnection();
+        if (!isConnected) {
+          throw new Error('Firebase bağlantısı kurulamadı');
+        }
 
-    // Auth state listener
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log('User is signed in:', user.uid);
-      } else {
-        console.log('User is signed out');
+        // Veritabanını başlat
+        const isInitialized = await initializeDatabase();
+        if (!isInitialized) {
+          throw new Error('Veritabanı başlatılamadı');
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error('App initialization error:', error);
+        setError(error.message);
+        setLoading(false);
       }
-    });
-
-    // Cleanup subscription
-    return () => {
-      unsubscribe();
     };
+
+    initApp();
   }, []);
 
-  // Example function to fetch data from Firestore
-  const fetchData = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, 'your-collection'));
-      querySnapshot.forEach((doc) => {
-        console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
-      });
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
+  if (loading) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        p: 3 
+      }}>
+        <Alert severity="error" sx={{ width: '100%', maxWidth: 600 }}>
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Router>

@@ -37,7 +37,8 @@ import {
   updateImageOrder,
   getSliderSettings,
   updateSliderSettings,
-  deleteImage
+  deleteImage,
+  checkFirebaseConnection
 } from '../utils/imageStore';
 
 const SettingsSection = ({ title, children }) => (
@@ -78,17 +79,31 @@ const Settings = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [images, selected, sliderSettings] = await Promise.all([
+        // Önce Firebase bağlantısını kontrol et
+        const isConnected = await checkFirebaseConnection();
+        if (!isConnected) {
+          throw new Error('Firebase bağlantısı kurulamadı');
+        }
+
+        // Verileri yükle
+        const [images, sliderSettings] = await Promise.all([
           getAllAvailableImages(),
-          getSelectedImages(),
           getSliderSettings()
         ]);
-        setAllImages(images);
-        setSelectedImages(selected);
-        setSettings(sliderSettings);
+
+        // Resimleri ayarla
+        setAllImages(images.filter(img => img.id !== '_init'));
+        
+        // Seçili resimleri ayarla
+        const selectedImgs = sliderSettings.images || [];
+        setSelectedImages(selectedImgs);
+        
+        // Ayarları ayarla
+        const { images: _, ...settingsWithoutImages } = sliderSettings;
+        setSettings(settingsWithoutImages);
       } catch (error) {
         console.error('Error loading data:', error);
-        showMessage('Veriler yüklenirken bir hata oluştu!', 'error');
+        showMessage('Veriler yüklenirken bir hata oluştu: ' + error.message, 'error');
       } finally {
         setLoading(false);
       }

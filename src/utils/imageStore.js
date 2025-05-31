@@ -6,7 +6,8 @@ import {
   setDoc, 
   deleteDoc,
   query,
-  orderBy 
+  orderBy,
+  getDoc
 } from 'firebase/firestore';
 import {
   ref,
@@ -300,11 +301,19 @@ const getImageDimensions = (file) => {
 // Slider ayarlarını al
 export const getSliderSettings = async () => {
   try {
-    const settingsDoc = await getDocs(collection(db, 'settings'));
-    const settings = settingsDoc.docs[0]?.data() || defaultSettings;
+    const settingsDoc = await getDoc(doc(db, 'settings', 'sliderSettings'));
+    const settings = settingsDoc.exists() ? settingsDoc.data() : defaultSettings;
     
-    // Seçili resimleri ayarlara ekle
-    const selectedImages = await getSelectedImages();
+    // Seçili resimleri al
+    const selectedImagesSnapshot = await getDocs(collection(db, 'selectedImages'));
+    const selectedImages = selectedImagesSnapshot.docs
+      .filter(doc => doc.id !== '_init')
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      .sort((a, b) => a.order - b.order);
+
     return {
       ...settings,
       images: selectedImages
@@ -321,8 +330,10 @@ export const getSliderSettings = async () => {
 // Slider ayarlarını güncelle
 export const updateSliderSettings = async (newSettings) => {
   try {
-    await setDoc(doc(db, 'settings', 'sliderSettings'), newSettings);
+    const { images, ...settingsWithoutImages } = newSettings;
+    await setDoc(doc(db, 'settings', 'sliderSettings'), settingsWithoutImages);
     window.dispatchEvent(new Event('settingsChanged'));
+    return true;
   } catch (error) {
     console.error('Error updating settings:', error);
     throw error;

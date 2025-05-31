@@ -143,10 +143,10 @@ const initializeDatabase = async () => {
     }
 
     // Settings collection'ı kontrol et
-    const settingsDoc = await getDoc(doc(db, 'settings', 'main'));
+    const settingsDoc = await getDoc(doc(db, 'settings', 'sliderSettings'));
     if (!settingsDoc.exists()) {
       // Settings yoksa oluştur
-      await setDoc(doc(db, 'settings', 'main'), defaultSettings);
+      await setDoc(doc(db, 'settings', 'sliderSettings'), defaultSettings);
       console.log('Default settings created');
     }
 
