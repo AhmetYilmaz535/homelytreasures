@@ -168,12 +168,14 @@ const Settings = () => {
 
     try {
       const newImage = await addCustomImage(file);
-      setAllImages(getAllAvailableImages());
+      const images = await getAllAvailableImages();
+      setAllImages(images);
       showSuccessMessage('Resim başarıyla yüklendi!');
     } catch (error) {
+      console.error('Error uploading image:', error);
       setSnackbar({
         open: true,
-        message: 'Resim yüklenirken bir hata oluştu!',
+        message: error.message || 'Resim yüklenirken bir hata oluştu!',
         severity: 'error'
       });
     }
