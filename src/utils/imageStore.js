@@ -6,6 +6,9 @@ const defaultImages = [
   { id: 4, path: '/images/ana4.jpg', order: 4 }
 ];
 
+// Maksimum yüklenebilecek resim sayısı
+const MAX_IMAGES = 10;
+
 const defaultSettings = {
   autoplay: true,
   autoplaySpeed: 5000,
@@ -89,19 +92,24 @@ const defaultSettings = {
   }
 };
 
-// Seçili resimleri localStorage'dan al
+// Tüm resimleri al
+export const getAllAvailableImages = () => {
+  try {
+    const images = localStorage.getItem('availableImages');
+    return images ? JSON.parse(images) : defaultImages;
+  } catch (error) {
+    console.error('Error getting images:', error);
+    return defaultImages;
+  }
+};
+
+// Seçili resimleri al
 export const getSelectedImages = () => {
   try {
-    const stored = localStorage.getItem('selectedImages');
-    if (!stored) {
-      // Eğer localStorage'da kayıtlı resim yoksa varsayılan resimleri kaydet
-      saveSelectedImages(defaultImages);
-      return defaultImages;
-    }
-    const parsedImages = JSON.parse(stored);
-    return parsedImages.length > 0 ? parsedImages : defaultImages;
+    const images = localStorage.getItem('selectedImages');
+    return images ? JSON.parse(images) : defaultImages;
   } catch (error) {
-    console.error('Error loading images:', error);
+    console.error('Error getting selected images:', error);
     return defaultImages;
   }
 };
@@ -116,34 +124,48 @@ export const saveSelectedImages = (images) => {
   }
 };
 
-// Slider ayarlarını al
-export const getSliderSettings = () => {
-  const settings = localStorage.getItem('sliderSettings');
-  return settings ? JSON.parse(settings) : defaultSettings;
-};
-
-// Slider ayarlarını güncelle
-export const updateSliderSettings = (newSettings) => {
+// Resim sil
+export const deleteImage = (imageId) => {
   try {
-    localStorage.setItem('sliderSettings', JSON.stringify(newSettings));
+    // Mevcut resimleri al
+    const currentImages = getAllAvailableImages();
+    const selectedImages = getSelectedImages();
+    
+    // Resmi mevcut resimlerden kaldır
+    const updatedImages = currentImages.filter(img => img.id !== imageId);
+    localStorage.setItem('availableImages', JSON.stringify(updatedImages));
+    
+    // Seçili resimlerden de kaldır
+    const updatedSelectedImages = selectedImages.filter(img => img.id !== imageId);
+    saveSelectedImages(updatedSelectedImages);
+    
     window.dispatchEvent(new Event('settingsChanged'));
+    return true;
   } catch (error) {
-    console.error('Error updating settings:', error);
+    console.error('Error deleting image:', error);
+    return false;
   }
 };
 
 // Yeni resim ekle
 export const addCustomImage = async (file) => {
   try {
+    const currentImages = getAllAvailableImages();
+    
+    // Maksimum resim sayısı kontrolü
+    if (currentImages.length >= MAX_IMAGES) {
+      throw new Error(`Maksimum ${MAX_IMAGES} resim yükleyebilirsiniz!`);
+    }
+    
     const reader = new FileReader();
     return new Promise((resolve, reject) => {
       reader.onload = () => {
         const newImage = {
           id: Date.now(),
           path: reader.result,
-          order: defaultImages.length + 1
+          order: currentImages.length + 1,
+          url: reader.result // Ana sayfada görüntüleme için url özelliği eklendi
         };
-        const currentImages = getAllAvailableImages();
         const updatedImages = [...currentImages, newImage];
         localStorage.setItem('availableImages', JSON.stringify(updatedImages));
         resolve(newImage);
@@ -157,14 +179,40 @@ export const addCustomImage = async (file) => {
   }
 };
 
-// Tüm mevcut resimleri al
-export const getAllAvailableImages = () => {
+// Slider ayarlarını al
+export const getSliderSettings = () => {
   try {
-    const stored = localStorage.getItem('availableImages');
-    return stored ? JSON.parse(stored) : defaultImages;
+    const settings = localStorage.getItem('sliderSettings');
+    const parsedSettings = settings ? JSON.parse(settings) : defaultSettings;
+    
+    // Seçili resimleri ayarlara ekle
+    const selectedImages = getSelectedImages();
+    return {
+      ...parsedSettings,
+      images: selectedImages.map(img => ({
+        ...img,
+        url: img.path // Ana sayfada görüntüleme için url özelliği eklendi
+      }))
+    };
   } catch (error) {
-    console.error('Error getting available images:', error);
-    return defaultImages;
+    console.error('Error getting settings:', error);
+    return {
+      ...defaultSettings,
+      images: defaultImages.map(img => ({
+        ...img,
+        url: img.path
+      }))
+    };
+  }
+};
+
+// Slider ayarlarını güncelle
+export const updateSliderSettings = (newSettings) => {
+  try {
+    localStorage.setItem('sliderSettings', JSON.stringify(newSettings));
+    window.dispatchEvent(new Event('settingsChanged'));
+  } catch (error) {
+    console.error('Error updating settings:', error);
   }
 };
 

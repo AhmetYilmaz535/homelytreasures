@@ -25,7 +25,8 @@ import {
 import {
   ArrowUpward as ArrowUpIcon,
   ArrowDownward as ArrowDownIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import {
   getAllAvailableImages,
@@ -34,7 +35,8 @@ import {
   addCustomImage,
   updateImageOrder,
   getSliderSettings,
-  updateSliderSettings
+  updateSliderSettings,
+  deleteImage
 } from '../utils/imageStore';
 
 const SettingsSection = ({ title, children }) => (
@@ -178,6 +180,23 @@ const Settings = () => {
     });
   };
 
+  const handleImageDelete = (image) => {
+    if (window.confirm('Bu resmi silmek istediğinizden emin misiniz?')) {
+      const success = deleteImage(image.id);
+      if (success) {
+        setAllImages(getAllAvailableImages());
+        setSelectedImages(getSelectedImages());
+        showSuccessMessage('Resim başarıyla silindi!');
+      } else {
+        setSnackbar({
+          open: true,
+          message: 'Resim silinirken bir hata oluştu!',
+          severity: 'error'
+        });
+      }
+    }
+  };
+
   if (!settings) return null;
 
   return (
@@ -230,6 +249,13 @@ const Settings = () => {
                         disabled={index === allImages.length - 1}
                       >
                         <ArrowDownIcon />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleImageDelete(image)}
+                        sx={{ color: 'error.main' }}
+                      >
+                        <DeleteIcon />
                       </IconButton>
                     </Box>
                   </Box>
