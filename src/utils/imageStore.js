@@ -7,7 +7,8 @@ import {
   deleteDoc,
   query,
   orderBy,
-  getDoc
+  getDoc,
+  writeBatch
 } from 'firebase/firestore';
 import {
   ref,
@@ -263,9 +264,8 @@ export const addCustomImage = async (file) => {
               dimensions: await getImageDimensions(file)
             };
 
-            // Firestore'a resim bilgilerini kaydet
+            // Sadece images koleksiyonuna ekle
             await setDoc(doc(db, 'images', imageId), newImage);
-            await setDoc(doc(db, 'selectedImages', imageId), newImage);
 
             window.dispatchEvent(new Event('settingsChanged'));
             resolve(newImage);
@@ -330,8 +330,22 @@ export const getSliderSettings = async () => {
 // Slider ayarlarını güncelle
 export const updateSliderSettings = async (newSettings) => {
   try {
-    const { images, ...settingsWithoutImages } = newSettings;
-    await setDoc(doc(db, 'settings', 'sliderSettings'), settingsWithoutImages);
+    // Mevcut ayarları al
+    const currentSettings = await getSliderSettings();
+    
+    // Yeni ayarları mevcut ayarlarla birleştir
+    const mergedSettings = {
+      ...currentSettings,
+      ...newSettings,
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Images özelliğini ayır
+    const { images, ...settingsToSave } = mergedSettings;
+    
+    // Ayarları kaydet
+    await setDoc(doc(db, 'settings', 'sliderSettings'), settingsToSave);
+    
     window.dispatchEvent(new Event('settingsChanged'));
     return true;
   } catch (error) {
@@ -343,14 +357,24 @@ export const updateSliderSettings = async (newSettings) => {
 // Resim sırasını güncelle
 export const updateImageOrder = async (images) => {
   try {
-    const updatePromises = images.map((image, index) => {
-      const updatedImage = { ...image, order: index + 1 };
-      return setDoc(doc(db, 'images', image.id), updatedImage);
+    const batch = writeBatch(db);
+    
+    // Her resmin sırasını güncelle
+    images.forEach((image, index) => {
+      const imageRef = doc(db, 'images', image.id);
+      batch.update(imageRef, { order: index + 1 });
+      
+      // Eğer resim seçiliyse selectedImages'da da güncelle
+      const selectedImageRef = doc(db, 'selectedImages', image.id);
+      batch.update(selectedImageRef, { order: index + 1 });
     });
-    await Promise.all(updatePromises);
+    
+    await batch.commit();
+    
+    window.dispatchEvent(new Event('settingsChanged'));
     return images;
   } catch (error) {
     console.error('Error updating image order:', error);
-    return images;
+    throw error;
   }
 }; 

@@ -20,6 +20,7 @@ import {
   Dashboard as DashboardIcon,
   ShoppingCart as ProductsIcon
 } from '@mui/icons-material';
+import { adminLogout } from '../firebase/adminServices';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -31,9 +32,15 @@ const AdminPanel = () => {
     }
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('isAdminLoggedIn');
-    navigate('/admin-login');
+  const handleLogout = async () => {
+    try {
+      await adminLogout();
+      localStorage.removeItem('isAdminLoggedIn');
+      navigate('/admin-login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('Çıkış yapılırken bir hata oluştu.');
+    }
   };
 
   const menuItems = [

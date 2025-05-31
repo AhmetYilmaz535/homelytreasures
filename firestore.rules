@@ -2,6 +2,20 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Admin koleksiyonu için kurallar
+    match /admins/{userId} {
+      // Admin oluşturmayı kısıtla
+      allow create: if !exists(/databases/$(database)/documents/admins/__admin_exists__);
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Admin varlık kontrolü için özel döküman
+    match /admins/__admin_exists__/{document=**} {
+      allow read: if true;
+      allow write: if !exists(/databases/$(database)/documents/admins/__admin_exists__);
+    }
+    
     // Test koleksiyonu için kurallar
     match /_connection_test/{document=**} {
       allow read, write: if true;
@@ -10,19 +24,19 @@ service cloud.firestore {
     // Settings koleksiyonu için kurallar
     match /settings/{document=**} {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
     
     // Images koleksiyonu için kurallar
     match /images/{document=**} {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
     
     // SelectedImages koleksiyonu için kurallar
     match /selectedImages/{document=**} {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
   }
 } 
