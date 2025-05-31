@@ -16,6 +16,16 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['@emotion/react', '@emotion/styled', '@mui/material', 'react-quill']
+    include: [
+      '@emotion/react', 
+      '@emotion/styled', 
+      '@mui/material', 
+      'react-quill',
+      '@mui/icons-material'
+    ],
+    exclude: ['@emotion/react/jsx-runtime']
+  },
+  esbuild: {
+    jsxInject: `import React from 'react'`
   }
 });
