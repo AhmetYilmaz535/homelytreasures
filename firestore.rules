@@ -1,0 +1,28 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Test koleksiyonu için kurallar
+    match /_connection_test/{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Settings koleksiyonu için kurallar
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // Images koleksiyonu için kurallar
+    match /images/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // SelectedImages koleksiyonu için kurallar
+    match /selectedImages/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+} 
