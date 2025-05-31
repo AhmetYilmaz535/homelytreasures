@@ -7,6 +7,8 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
+const ADMIN_UID = 'jYisFTdTDeNFVpLwSESS7rt6KPa2';
+
 // Admin kullanıcısını oluştur veya güncelle
 export const createAdminUser = async (email, password) => {
   try {
@@ -25,15 +27,20 @@ export const createAdminUser = async (email, password) => {
       user = userCredential.user;
     }
 
-    // Admin bilgilerini Firestore'a kaydet/güncelle
-    await setDoc(doc(db, 'users', user.uid), {
-      username: email.split('@')[0],
-      role: 'admin',
-      email: email,
-      createdAt: new Date()
-    }, { merge: true }); // merge: true sayesinde varolan dökümanı günceller
-
-    return true;
+    // Sadece ADMIN_UID'ye sahip kullanıcı için admin rolünü ver
+    if (user.uid === ADMIN_UID) {
+      await setDoc(doc(db, 'users', user.uid), {
+        username: email.split('@')[0],
+        role: 'admin',
+        email: email,
+        createdAt: new Date()
+      }, { merge: true });
+      return true;
+    } else {
+      // Admin olmayan kullanıcıyı çıkış yaptır
+      await signOut(auth);
+      return false;
+    }
   } catch (error) {
     console.error('Error creating/updating admin:', error);
     return false;
@@ -46,11 +53,23 @@ export const loginUser = async (email, password) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Kullanıcı bilgilerini Firestore'dan al
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
-    if (userDoc.exists() && userDoc.data().role === 'admin') {
-      return { success: true, user: userDoc.data() };
+    // Sadece ADMIN_UID'ye sahip kullanıcıya izin ver
+    if (user.uid === ADMIN_UID) {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        return { success: true, user: userDoc.data() };
+      } else {
+        // Kullanıcı dokümanı yoksa oluştur
+        await setDoc(doc(db, 'users', user.uid), {
+          username: email.split('@')[0],
+          role: 'admin',
+          email: email,
+          createdAt: new Date()
+        });
+        return { success: true, user: { email, role: 'admin' } };
+      }
     } else {
+      // Admin olmayan kullanıcıyı çıkış yaptır
       await signOut(auth);
       return { success: false, error: 'Unauthorized access' };
     }
