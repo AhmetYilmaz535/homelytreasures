@@ -7,9 +7,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
-const ADMIN_UID = 'jYisFTdTDeNFVpLwSESS7rt6KPa2';
-
-// Admin kullanıcısını oluştur veya güncelle
+// Admin kullanıcısını oluştur
 export const createAdminUser = async (email, password) => {
   try {
     let user;
@@ -27,20 +25,15 @@ export const createAdminUser = async (email, password) => {
       user = userCredential.user;
     }
 
-    // Sadece ADMIN_UID'ye sahip kullanıcı için admin rolünü ver
-    if (user.uid === ADMIN_UID) {
-      await setDoc(doc(db, 'users', user.uid), {
-        username: email.split('@')[0],
-        role: 'admin',
-        email: email,
-        createdAt: new Date()
-      }, { merge: true });
-      return true;
-    } else {
-      // Admin olmayan kullanıcıyı çıkış yaptır
-      await signOut(auth);
-      return false;
-    }
+    // Admin rolünü ver
+    await setDoc(doc(db, 'users', user.uid), {
+      username: email.split('@')[0],
+      role: 'admin',
+      email: email,
+      createdAt: new Date()
+    }, { merge: true });
+    
+    return true;
   } catch (error) {
     console.error('Error creating/updating admin:', error);
     return false;
@@ -53,21 +46,11 @@ export const loginUser = async (email, password) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Sadece ADMIN_UID'ye sahip kullanıcıya izin ver
-    if (user.uid === ADMIN_UID) {
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (userDoc.exists()) {
-        return { success: true, user: userDoc.data() };
-      } else {
-        // Kullanıcı dokümanı yoksa oluştur
-        await setDoc(doc(db, 'users', user.uid), {
-          username: email.split('@')[0],
-          role: 'admin',
-          email: email,
-          createdAt: new Date()
-        });
-        return { success: true, user: { email, role: 'admin' } };
-      }
+    // Kullanıcı dokümanını kontrol et
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    
+    if (userDoc.exists() && userDoc.data().role === 'admin') {
+      return { success: true, user: userDoc.data() };
     } else {
       // Admin olmayan kullanıcıyı çıkış yaptır
       await signOut(auth);
@@ -83,6 +66,7 @@ export const loginUser = async (email, password) => {
 export const logoutUser = async () => {
   try {
     await signOut(auth);
+    localStorage.removeItem('isAdminLoggedIn');
     return true;
   } catch (error) {
     console.error('Error logging out:', error);

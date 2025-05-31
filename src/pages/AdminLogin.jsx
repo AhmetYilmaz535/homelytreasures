@@ -32,7 +32,7 @@ const AdminLogin = () => {
 
     const result = await loginUser(email, password);
     if (result.success) {
-      localStorage.setItem('isAdmin', 'true');
+      localStorage.setItem('isAdminLoggedIn', 'true');
       navigate('/admin');
     } else {
       setError(result.error || 'Invalid credentials');
@@ -126,7 +126,6 @@ const AdminLogin = () => {
         </Paper>
       </Box>
 
-      {/* Create Admin Dialog */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Create Admin User</DialogTitle>
         <DialogContent>
