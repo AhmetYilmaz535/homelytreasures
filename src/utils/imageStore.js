@@ -341,15 +341,31 @@ export const getSliderSettings = async () => {
 // Slider ayarlarını güncelle
 export const updateSliderSettings = async (newSettings) => {
   try {
+    console.log('Updating slider settings with:', newSettings);
+    
     // Mevcut ayarları al
-    const currentSettings = await getSliderSettings();
+    const settingsDoc = await getDoc(doc(db, 'settings', 'sliderSettings'));
+    const currentSettings = settingsDoc.exists() ? settingsDoc.data() : defaultSettings;
     
     // Yeni ayarları mevcut ayarlarla birleştir
     const mergedSettings = {
       ...currentSettings,
-      ...newSettings,
+      effects: {
+        ...currentSettings.effects,
+        ...newSettings.effects
+      },
+      texts: {
+        ...currentSettings.texts,
+        ...newSettings.texts
+      },
+      footer: {
+        ...currentSettings.footer,
+        ...newSettings.footer
+      },
       updatedAt: new Date().toISOString()
     };
+    
+    console.log('Merged settings:', mergedSettings);
     
     // Images özelliğini ayır
     const { images, ...settingsToSave } = mergedSettings;
@@ -361,7 +377,12 @@ export const updateSliderSettings = async (newSettings) => {
     return true;
   } catch (error) {
     console.error('Error updating settings:', error);
-    throw error;
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    throw new Error('Ayarlar güncellenirken bir hata oluştu: ' + error.message);
   }
 };
 

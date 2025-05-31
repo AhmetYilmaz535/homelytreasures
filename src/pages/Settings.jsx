@@ -213,18 +213,39 @@ const Settings = () => {
 
   const handleSettingChange = async (section, subsection, key, value) => {
     try {
+      console.log('Updating settings:', { section, subsection, key, value });
       const newSettings = { ...settings };
+      
       if (subsection) {
+        if (!newSettings[section]) {
+          newSettings[section] = {};
+        }
+        if (!newSettings[section][subsection]) {
+          newSettings[section][subsection] = {};
+        }
         newSettings[section][subsection][key] = value;
       } else {
+        if (!newSettings[section]) {
+          newSettings[section] = {};
+        }
         newSettings[section][key] = value;
       }
+      
+      console.log('New settings:', newSettings);
       setSettings(newSettings);
-      await updateSliderSettings(newSettings);
+      
+      const result = await updateSliderSettings(newSettings);
+      console.log('Update result:', result);
+      
       showMessage('Ayarlar güncellendi!');
     } catch (error) {
       console.error('Error updating settings:', error);
-      showMessage('Ayarlar güncellenirken bir hata oluştu!', 'error');
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+      showMessage('Ayarlar güncellenirken bir hata oluştu: ' + error.message, 'error');
     }
   };
 
