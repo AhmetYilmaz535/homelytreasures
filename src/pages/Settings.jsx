@@ -63,44 +63,94 @@ const Settings = () => {
     image: null
   });
 
-  useEffect(() => {
-    setAllImages(getAllAvailableImages());
-    setSelectedImages(getSelectedImages());
-    setSettings(getSliderSettings());
-  }, []);
-
-  const handleImageToggle = (image) => {
-    let newSelection;
-    if (selectedImages.find(img => img.id === image.id)) {
-      if (selectedImages.length > 1) {
-        newSelection = selectedImages.filter(img => img.id !== image.id);
-      } else {
-        setSnackbar({
-          open: true,
-          message: 'En az bir resim seçili olmalıdır!',
-          severity: 'error'
-        });
-        return;
-      }
-    } else {
-      newSelection = [...selectedImages, image];
-    }
-    
-    setSelectedImages(newSelection);
-    saveSelectedImages(newSelection);
-    showSuccessMessage('Değişiklikler kaydedildi!');
+  const showSuccessMessage = (message) => {
+    setSnackbar({
+      open: true,
+      message,
+      severity: 'success'
+    });
   };
 
-  const moveImage = (index, direction) => {
-    const items = Array.from(allImages);
-    if (direction === 'up' && index > 0) {
-      [items[index], items[index - 1]] = [items[index - 1], items[index]];
-    } else if (direction === 'down' && index < items.length - 1) {
-      [items[index], items[index + 1]] = [items[index + 1], items[index]];
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [images, selected, sliderSettings] = await Promise.all([
+          getAllAvailableImages(),
+          getSelectedImages(),
+          getSliderSettings()
+        ]);
+        setAllImages(images);
+        setSelectedImages(selected);
+        setSettings(sliderSettings);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setSnackbar({
+          open: true,
+          message: 'Veriler yüklenirken bir hata oluştu!',
+          severity: 'error'
+        });
+      }
+    };
+    loadData();
+
+    // Settings değişikliklerini dinle
+    const handleSettingsChange = async () => {
+      loadData();
+    };
+    window.addEventListener('settingsChanged', handleSettingsChange);
+    return () => window.removeEventListener('settingsChanged', handleSettingsChange);
+  }, []);
+
+  const handleImageToggle = async (image) => {
+    try {
+      let newSelection;
+      if (selectedImages.find(img => img.id === image.id)) {
+        if (selectedImages.length > 1) {
+          newSelection = selectedImages.filter(img => img.id !== image.id);
+        } else {
+          setSnackbar({
+            open: true,
+            message: 'En az bir resim seçili olmalıdır!',
+            severity: 'error'
+          });
+          return;
+        }
+      } else {
+        newSelection = [...selectedImages, image];
+      }
+      
+      await saveSelectedImages(newSelection);
+      setSelectedImages(newSelection);
+      showSuccessMessage('Değişiklikler kaydedildi!');
+    } catch (error) {
+      console.error('Error toggling image:', error);
+      setSnackbar({
+        open: true,
+        message: 'Değişiklikler kaydedilirken bir hata oluştu!',
+        severity: 'error'
+      });
     }
-    const updatedImages = updateImageOrder(items);
-    setAllImages(updatedImages);
-    showSuccessMessage('Sıralama güncellendi!');
+  };
+
+  const moveImage = async (index, direction) => {
+    try {
+      const items = Array.from(allImages);
+      if (direction === 'up' && index > 0) {
+        [items[index], items[index - 1]] = [items[index - 1], items[index]];
+      } else if (direction === 'down' && index < items.length - 1) {
+        [items[index], items[index + 1]] = [items[index + 1], items[index]];
+      }
+      const updatedImages = await updateImageOrder(items);
+      setAllImages(updatedImages);
+      showSuccessMessage('Sıralama güncellendi!');
+    } catch (error) {
+      console.error('Error moving image:', error);
+      setSnackbar({
+        open: true,
+        message: 'Sıralama güncellenirken bir hata oluştu!',
+        severity: 'error'
+      });
+    }
   };
 
   const handleImageUpload = async (event) => {
@@ -129,65 +179,42 @@ const Settings = () => {
     }
   };
 
-  const handleSettingChange = (section, subsection, key, value) => {
-    const newSettings = { ...settings };
-    
-    if (section === 'texts') {
-      if (!newSettings.texts) {
-        newSettings.texts = {};
-      }
-      if (!newSettings.texts[subsection]) {
-        newSettings.texts[subsection] = {};
-      }
-      newSettings.texts[subsection][key] = value;
-    } else if (section === 'effects') {
-      if (!newSettings.effects[subsection]) {
-        newSettings.effects[subsection] = {};
-      }
-      newSettings.effects[subsection][key] = value;
-    } else if (section === 'footer') {
-      if (!newSettings.footer) {
-        newSettings.footer = {};
-      }
-      if (!newSettings.footer[subsection]) {
-        newSettings.footer[subsection] = {};
-      }
-      
-      // Sosyal medya ayarları için özel işlem
-      if (subsection === 'socialMedia' && key.includes('.')) {
-        const [platform, property] = key.split('.');
-        if (!newSettings.footer.socialMedia[platform]) {
-          newSettings.footer.socialMedia[platform] = {};
-        }
-        newSettings.footer.socialMedia[platform][property] = value;
+  const handleSettingChange = async (section, subsection, key, value) => {
+    try {
+      const newSettings = { ...settings };
+      if (subsection) {
+        newSettings[section][subsection][key] = value;
       } else {
-        newSettings.footer[subsection][key] = value;
+        newSettings[section][key] = value;
       }
-    } else if (section === 'root') {
-      newSettings[key] = value;
+      setSettings(newSettings);
+      await updateSliderSettings(newSettings);
+      showSuccessMessage('Ayarlar güncellendi!');
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      setSnackbar({
+        open: true,
+        message: 'Ayarlar güncellenirken bir hata oluştu!',
+        severity: 'error'
+      });
     }
-    
-    setSettings(newSettings);
-    updateSliderSettings(newSettings);
-    showSuccessMessage('Ayarlar güncellendi!');
   };
 
-  const showSuccessMessage = (message) => {
-    setSnackbar({
-      open: true,
-      message,
-      severity: 'success'
-    });
-  };
-
-  const handleImageDelete = (image) => {
+  const handleImageDelete = async (image) => {
     if (window.confirm('Bu resmi silmek istediğinizden emin misiniz?')) {
-      const success = deleteImage(image.id);
-      if (success) {
-        setAllImages(getAllAvailableImages());
-        setSelectedImages(getSelectedImages());
-        showSuccessMessage('Resim başarıyla silindi!');
-      } else {
+      try {
+        const success = await deleteImage(image.id);
+        if (success) {
+          const [images, selected] = await Promise.all([
+            getAllAvailableImages(),
+            getSelectedImages()
+          ]);
+          setAllImages(images);
+          setSelectedImages(selected);
+          showSuccessMessage('Resim başarıyla silindi!');
+        }
+      } catch (error) {
+        console.error('Error deleting image:', error);
         setSnackbar({
           open: true,
           message: 'Resim silinirken bir hata oluştu!',
