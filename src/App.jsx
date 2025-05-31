@@ -19,8 +19,8 @@ import AdminPanel from './pages/AdminPanel';
 import Products from './pages/Products';
 import { getSliderSettings } from './utils/imageStore';
 import Footer from './components/Footer';
-import { initializeDatabase, checkFirebaseConnection } from './firebase';
-import { auth, db } from './firebase';
+import { initializeDatabase, checkFirebaseConnection } from './firebase/index.js';
+import { auth, db } from './firebase/index.js';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
 
