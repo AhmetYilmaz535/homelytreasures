@@ -18,6 +18,9 @@ import Products from './pages/Products';
 import { getSliderSettings } from './utils/imageStore';
 import Footer from './components/Footer';
 import { initializeDatabase } from './firebase/index.js';
+import { auth, db } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { collection, getDocs } from 'firebase/firestore';
 
 const theme = createTheme({
   palette: {
@@ -199,7 +202,33 @@ function App() {
       await initializeDatabase();
     };
     initDB();
+
+    // Auth state listener
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('User is signed in:', user.uid);
+      } else {
+        console.log('User is signed out');
+      }
+    });
+
+    // Cleanup subscription
+    return () => {
+      unsubscribe();
+    };
   }, []);
+
+  // Example function to fetch data from Firestore
+  const fetchData = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'your-collection'));
+      querySnapshot.forEach((doc) => {
+        console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
+      });
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
 
   return (
     <Router>

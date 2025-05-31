@@ -25,5 +25,12 @@ export default defineConfig({
       '@mui/icons-material'
     ],
     exclude: ['@emotion/react/jsx-runtime']
+  },
+  server: {
+    cors: {
+      origin: ['https://thehomelytreasures.com', 'https://www.thehomelytreasures.com'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      credentials: true
+    }
   }
 });
