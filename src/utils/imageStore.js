@@ -151,6 +151,7 @@ export const deleteImage = (imageId) => {
 export const addCustomImage = async (file) => {
   try {
     const currentImages = getAllAvailableImages();
+    const selectedImages = getSelectedImages();
     
     // Maksimum resim sayısı kontrolü
     if (currentImages.length >= MAX_IMAGES) {
@@ -164,10 +165,18 @@ export const addCustomImage = async (file) => {
           id: Date.now(),
           path: reader.result,
           order: currentImages.length + 1,
-          url: reader.result // Ana sayfada görüntüleme için url özelliği eklendi
+          url: reader.result
         };
+        
+        // Mevcut resimlere ekle
         const updatedImages = [...currentImages, newImage];
         localStorage.setItem('availableImages', JSON.stringify(updatedImages));
+        
+        // Seçili resimlere ekle
+        const updatedSelectedImages = [...selectedImages, newImage];
+        saveSelectedImages(updatedSelectedImages);
+        
+        window.dispatchEvent(new Event('settingsChanged'));
         resolve(newImage);
       };
       reader.onerror = reject;
