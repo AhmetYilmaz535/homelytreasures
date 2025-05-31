@@ -302,28 +302,39 @@ const getImageDimensions = (file) => {
 export const getSliderSettings = async () => {
   try {
     const settingsDoc = await getDoc(doc(db, 'settings', 'sliderSettings'));
-    const settings = settingsDoc.exists() ? settingsDoc.data() : defaultSettings;
     
-    // Seçili resimleri al
-    const selectedImagesSnapshot = await getDocs(collection(db, 'selectedImages'));
-    const selectedImages = selectedImagesSnapshot.docs
-      .filter(doc => doc.id !== '_init')
-      .map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
-      .sort((a, b) => a.order - b.order);
+    if (!settingsDoc.exists()) {
+      // Varsayılan ayarları kaydet
+      await setDoc(doc(db, 'settings', 'sliderSettings'), defaultSettings);
+      
+      // Varsayılan resimleri kaydet
+      const batch = writeBatch(db);
+      defaultImages.forEach(image => {
+        const imageRef = doc(db, 'images', `default_${image.id}`);
+        batch.set(imageRef, image);
+        
+        // Aynı zamanda seçili resimler olarak da ekle
+        const selectedImageRef = doc(db, 'selectedImages', `default_${image.id}`);
+        batch.set(selectedImageRef, image);
+      });
+      await batch.commit();
+      
+      return {
+        ...defaultSettings,
+        images: defaultImages
+      };
+    }
 
+    // Seçili resimleri al
+    const selectedImages = await getSelectedImages();
+    
     return {
-      ...settings,
+      ...settingsDoc.data(),
       images: selectedImages
     };
   } catch (error) {
-    console.error('Error getting settings:', error);
-    return {
-      ...defaultSettings,
-      images: []
-    };
+    console.error('Error getting slider settings:', error);
+    return defaultSettings;
   }
 };
 

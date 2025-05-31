@@ -85,7 +85,7 @@ const ImageSlider = () => {
           <Box
             key={index}
             component="img"
-            src={image.url}
+            src={image.path}
             alt={`Slide ${index + 1}`}
             sx={{
               position: 'absolute',
