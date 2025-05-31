@@ -23,7 +23,6 @@ import { initializeDatabase, checkFirebaseConnection } from './firebase';
 import { auth, db } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
-import Layout from './components/Layout';
 
 const theme = createTheme({
   palette: {
