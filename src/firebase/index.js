@@ -26,6 +26,9 @@ const db = getFirestore(app);
 
 // Storage'ı başlat
 const storage = getStorage(app);
+if (!storage) {
+  console.error('Firebase Storage initialization failed');
+}
 
 // Authentication'ı başlat
 const auth = getAuth(app);

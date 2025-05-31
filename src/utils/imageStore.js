@@ -194,20 +194,34 @@ export const addCustomImage = async (file) => {
       throw new Error(`Maksimum ${MAX_IMAGES} resim yükleyebilirsiniz!`);
     }
 
+    // Resim dosyası kontrolü
+    if (!file || !file.type.startsWith('image/')) {
+      throw new Error('Geçersiz resim dosyası!');
+    }
+
     const imageId = Date.now().toString();
     
     // Storage'a resmi yükle
     const storageRef = ref(storage, `images/${imageId}`);
-    await uploadBytes(storageRef, file);
+    const uploadResult = await uploadBytes(storageRef, file);
+    
+    if (!uploadResult) {
+      throw new Error('Resim yüklenemedi!');
+    }
     
     // Yüklenen resmin URL'ini al
     const imageUrl = await getDownloadURL(storageRef);
     
+    if (!imageUrl) {
+      throw new Error('Resim URL\'i alınamadı!');
+    }
+
     const newImage = {
       id: imageId,
       path: imageUrl,
       url: imageUrl,
-      order: currentImages.length + 1
+      order: currentImages.length + 1,
+      createdAt: new Date().toISOString()
     };
     
     // Firestore'a resim bilgilerini kaydet

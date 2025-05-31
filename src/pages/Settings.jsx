@@ -53,6 +53,7 @@ const Settings = () => {
   const [allImages, setAllImages] = useState([]);
   const [selectedImages, setSelectedImages] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -166,6 +167,7 @@ const Settings = () => {
       return;
     }
 
+    setLoading(true);
     try {
       const newImage = await addCustomImage(file);
       const images = await getAllAvailableImages();
@@ -178,6 +180,12 @@ const Settings = () => {
         message: error.message || 'Resim yüklenirken bir hata oluştu!',
         severity: 'error'
       });
+    } finally {
+      setLoading(false);
+      // Input'u temizle
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -236,8 +244,9 @@ const Settings = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => fileInputRef.current.click()}
+            disabled={loading}
           >
-            Yeni Resim Yükle
+            {loading ? 'Yükleniyor...' : 'Yeni Resim Yükle'}
           </Button>
           <input
             type="file"
@@ -245,8 +254,15 @@ const Settings = () => {
             style={{ display: 'none' }}
             accept="image/*"
             onChange={handleImageUpload}
+            disabled={loading}
           />
         </Box>
+
+        {allImages.length === 0 && !loading && (
+          <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', my: 4 }}>
+            Henüz hiç resim yüklenmemiş. Yeni resim eklemek için yukarıdaki butonu kullanın.
+          </Typography>
+        )}
 
         <Grid container spacing={2}>
           {allImages.map((image, index) => (
