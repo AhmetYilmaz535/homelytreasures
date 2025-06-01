@@ -1,4 +1,4 @@
-import { db, storage } from './config';
+import { db, storage } from './index';
 import { 
   collection, 
   addDoc, 
