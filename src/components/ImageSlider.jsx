@@ -68,15 +68,23 @@ const ImageSlider = () => {
     const duration = effects.kenBurns.duration || 20000;
     
     return {
-      animation: `kenBurns ${duration}ms ease-in-out infinite alternate`,
-      '@keyframes kenBurns': {
-        '0%': {
-          transform: `scale(${zoomRange.min})`,
-        },
-        '100%': {
-          transform: `scale(${zoomRange.max})`,
-        },
+      animation: `kenBurns${currentIndex} ${duration}ms ease-in-out`,
+      '@keyframes kenBurns0': {
+        '0%': { transform: `scale(${zoomRange.min})` },
+        '100%': { transform: `scale(${zoomRange.max})` }
       },
+      '@keyframes kenBurns1': {
+        '0%': { transform: `scale(${zoomRange.max})` },
+        '100%': { transform: `scale(${zoomRange.min})` }
+      },
+      '@keyframes kenBurns2': {
+        '0%': { transform: `scale(${zoomRange.min})` },
+        '100%': { transform: `scale(${zoomRange.max})` }
+      },
+      '@keyframes kenBurns3': {
+        '0%': { transform: `scale(${zoomRange.max})` },
+        '100%': { transform: `scale(${zoomRange.min})` }
+      }
     };
   };
 
