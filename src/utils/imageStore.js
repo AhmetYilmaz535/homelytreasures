@@ -30,23 +30,24 @@ const defaultImages = [
 // Maksimum yüklenebilecek resim sayısı
 const MAX_IMAGES = 10;
 
+// Varsayılan ayarlar
 const defaultSettings = {
   autoplay: true,
-  autoplaySpeed: 5000,
+  autoplaySpeed: 3000,
   effects: {
     kenBurns: {
-      enabled: true,
-      duration: 20000,
-      zoomRange: { min: 1.0, max: 1.2 }
+      enabled: false,
+      duration: 15000,
+      zoomRange: { min: 1.0, max: 1.1 }
     },
     transition: {
-      duration: 1500,
-      blurAmount: 10,
-      darkOverlay: 0.2
+      duration: 500,
+      blurAmount: 3,
+      darkOverlay: 0.1
     },
     filmGrain: {
-      enabled: true,
-      opacity: 0.05,
+      enabled: false,
+      opacity: 0.03,
       animationSpeed: 8
     }
   },
@@ -123,15 +124,17 @@ const defaultSettings = {
 // Tüm resimleri al
 export const getAllAvailableImages = async () => {
   try {
+    console.log('Getting images from Firebase...');
     const imagesRef = collection(db, 'images');
     const q = query(imagesRef, orderBy('order', 'asc'));
     const snapshot = await getDocs(q);
-    console.log('Firebase snapshot:', snapshot.docs.map(doc => doc.data()));
+    console.log('Raw Firebase data:', snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     const images = snapshot.docs
       .map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
+    console.log('Processed images:', images);
     return images;
   } catch (error) {
     console.error('Error getting available images:', error);
@@ -349,6 +352,7 @@ export const getSliderSettings = async () => {
     
     // Ayarları al
     const settingsDoc = await getDoc(doc(db, 'settings', 'sliderSettings'));
+    const currentSettings = settingsDoc.exists() ? settingsDoc.data() : defaultSettings;
     
     // Seçili resimleri al
     const selectedImagesRef = collection(db, 'selectedImages');
@@ -360,25 +364,22 @@ export const getSliderSettings = async () => {
         ...doc.data()
       }));
     
-    // Eğer seçili resim yoksa veya eski resim yolları varsa, güncelle
-    if (selectedImages.length === 0 || selectedImages.some(img => img.path.includes('slider'))) {
-      console.log('Updating to new image paths...');
-      await updateFirebaseData();
-      return {
-        ...defaultSettings,
-        images: defaultImages
-      };
+    // Eğer hiç ayar yoksa varsayılan ayarları kullan
+    if (!settingsDoc.exists()) {
+      console.log('No settings found, using defaults...');
+      await setDoc(doc(db, 'settings', 'sliderSettings'), defaultSettings);
     }
     
+    // Ayarları döndür
     return {
-      ...settingsDoc.data(),
+      ...currentSettings,
       images: selectedImages
     };
   } catch (error) {
     console.error('Error getting slider settings:', error);
     return {
       ...defaultSettings,
-      images: defaultImages
+      images: []
     };
   }
 };
@@ -395,9 +396,22 @@ export const updateSliderSettings = async (newSettings) => {
     // Yeni ayarları mevcut ayarlarla birleştir
     const mergedSettings = {
       ...currentSettings,
+      autoplay: newSettings.autoplay ?? currentSettings.autoplay,
+      autoplaySpeed: newSettings.autoplaySpeed ?? currentSettings.autoplaySpeed,
       effects: {
         ...currentSettings.effects,
-        ...newSettings.effects
+        kenBurns: {
+          ...currentSettings.effects?.kenBurns,
+          ...newSettings.effects?.kenBurns
+        },
+        transition: {
+          ...currentSettings.effects?.transition,
+          ...newSettings.effects?.transition
+        },
+        filmGrain: {
+          ...currentSettings.effects?.filmGrain,
+          ...newSettings.effects?.filmGrain
+        }
       },
       texts: {
         ...currentSettings.texts,
