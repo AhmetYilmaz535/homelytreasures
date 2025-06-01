@@ -1,9 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { 
   getFirestore, 
-  enableMultiTabIndexedDbPersistence,
-  initializeFirestore,
-  CACHE_SIZE_UNLIMITED
+  enableMultiTabIndexedDbPersistence
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
@@ -32,11 +30,8 @@ const initializeFirebase = () => {
     // Firebase'i başlat
     app = initializeApp(firebaseConfig);
     
-    // Firestore'u özel ayarlarla başlat
-    db = initializeFirestore(app, {
-      cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-      experimentalAutoDetectLongPolling: true
-    });
+    // Firestore'u başlat
+    db = getFirestore(app);
 
     // Multi-tab persistence'ı etkinleştir
     if (typeof window !== 'undefined') {
