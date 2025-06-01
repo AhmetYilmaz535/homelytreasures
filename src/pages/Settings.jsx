@@ -41,6 +41,9 @@ import {
   deleteImage,
   defaultSettings
 } from '../utils/imageStore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import imageCompression from 'browser-image-compression';
+import { storage } from '../firebase';
 
 const SettingsSection = ({ title, children }) => (
   <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
@@ -214,6 +217,59 @@ const Settings = () => {
     }
   };
 
+  const handleLogoUpload = async (file) => {
+    if (!file) return;
+
+    // Dosya tipi kontrolü
+    if (!file.type.startsWith('image/')) {
+      showMessage('Lütfen geçerli bir resim dosyası seçin!', 'error');
+      return;
+    }
+
+    // Dosya boyutu kontrolü (2MB)
+    const MAX_FILE_SIZE = 2 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      showMessage('Logo boyutu 2MB\'dan büyük olamaz!', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Resmi yükle
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 500,
+        useWebWorker: true
+      };
+      
+      const compressedFile = await imageCompression(file, options);
+      const storageRef = ref(storage, `logos/site_logo_${Date.now()}`);
+      const uploadTask = uploadBytesResumable(storageRef, compressedFile);
+      
+      // Upload progress
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(progress);
+        }
+      );
+
+      // Upload complete
+      const snapshot = await uploadTask;
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      // Logo path'ini güncelle
+      await handleSettingChange('logo', '', 'path', downloadURL);
+      showMessage('Logo başarıyla yüklendi!');
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      showMessage(error.message || 'Logo yüklenirken bir hata oluştu!', 'error');
+    } finally {
+      setLoading(false);
+      setUploadProgress(0);
+    }
+  };
+
   const handleSettingChange = async (section, subsection, key, value) => {
     try {
       console.log('Updating settings:', { section, subsection, key, value });
@@ -274,15 +330,21 @@ const Settings = () => {
           };
         }
       } else if (section === 'logo') {
+        // Logo ayarlarını güncelle
         updateData = {
           logo: {
             ...settings.logo,
-            [key]: value
+            [key]: value || '' // undefined yerine boş string kullan
           }
+        };
+      } else {
+        // Genel ayarlar için
+        updateData = {
+          [key]: value
         };
       }
       
-      // Ayarları güncelle
+      // Firebase'e kaydet
       const result = await updateSliderSettings(updateData);
       
       if (result) {
@@ -299,7 +361,12 @@ const Settings = () => {
             newSettings.footer[subsection][key] = value;
           }
         } else if (section === 'logo') {
-          newSettings.logo = value;
+          if (!newSettings.logo) {
+            newSettings.logo = {};
+          }
+          newSettings.logo[key] = value || ''; // undefined yerine boş string kullan
+        } else {
+          newSettings[key] = value;
         }
         
         setSettings(newSettings);
@@ -545,22 +612,7 @@ const Settings = () => {
                           type="file"
                           hidden
                           accept="image/*"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            
-                            try {
-                              setLoading(true);
-                              const newImage = await addCustomImage(file);
-                              handleSettingChange('logo', '', 'path', newImage.path);
-                              showMessage('Logo başarıyla yüklendi!');
-                            } catch (error) {
-                              console.error('Error uploading logo:', error);
-                              showMessage(error.message || 'Logo yüklenirken bir hata oluştu!', 'error');
-                            } finally {
-                              setLoading(false);
-                            }
-                          }}
+                          onChange={(e) => handleLogoUpload(e.target.files?.[0])}
                         />
                       </Button>
                       {settings.logo.path && (
