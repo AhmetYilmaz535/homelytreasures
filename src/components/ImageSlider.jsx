@@ -32,7 +32,7 @@ const ImageSlider = () => {
     setIsTransitioning(true);
     setCurrentIndex(newIndex);
     // CSS transition süresi kadar bekle
-    setTimeout(() => setIsTransitioning(false), settings?.effects?.transition?.duration || 500);
+    setTimeout(() => setIsTransitioning(false), settings?.effects?.transition?.duration || 800);
   }, [settings?.effects?.transition?.duration]);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ const ImageSlider = () => {
     if (settings?.autoplay && images.length > 1) {
       interval = setInterval(() => {
         handleTransition((currentIndex + 1) % images.length);
-      }, settings.autoplaySpeed || 3000);
+      }, settings.autoplaySpeed || 6000);
     }
     return () => clearInterval(interval);
   }, [currentIndex, settings, images.length, handleTransition]);

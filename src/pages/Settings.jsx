@@ -506,6 +506,40 @@ const Settings = () => {
         </Grid>
       </SettingsSection>
 
+      <SettingsSection title="Genel Ayarlar">
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings?.autoplay || false}
+              onChange={(e) => handleSettingChange('', '', 'autoplay', e.target.checked)}
+            />
+          }
+          label="Otomatik Geçiş"
+        />
+        {settings?.autoplay && (
+          <Box sx={{ mt: 2 }}>
+            <Typography gutterBottom>
+              Otomatik Geçiş Süresi (saniye)
+            </Typography>
+            <MuiSlider
+              value={settings?.autoplaySpeed || 6000}
+              onChange={(e, value) => handleSettingChange('', '', 'autoplaySpeed', value)}
+              min={2000}
+              max={10000}
+              step={1000}
+              marks={[
+                { value: 2000, label: '2s' },
+                { value: 6000, label: '6s' },
+                { value: 10000, label: '10s' },
+              ]}
+              valueLabelDisplay="auto"
+              valueLabelFormat={(value) => `${value/1000}s`}
+              sx={{ maxWidth: 300 }}
+            />
+          </Box>
+        )}
+      </SettingsSection>
+
       <SettingsSection title="Ken Burns Efekti">
         <FormControlLabel
           control={
@@ -562,13 +596,14 @@ const Settings = () => {
             value={settings.effects.transition.duration}
             onChange={(e, value) => handleSettingChange('effects', 'transition', 'duration', value)}
             min={100}
-            max={2000}
+            max={5000}
             step={100}
             marks={[
               { value: 100, label: '100ms' },
               { value: 500, label: '500ms' },
               { value: 1000, label: '1s' },
-              { value: 2000, label: '2s' }
+              { value: 2500, label: '2.5s' },
+              { value: 5000, label: '5s' }
             ]}
             valueLabelDisplay="auto"
             valueLabelFormat={(value) => `${value}ms`}

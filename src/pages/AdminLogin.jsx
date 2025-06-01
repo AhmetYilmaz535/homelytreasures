@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -7,33 +7,16 @@ import {
   TextField,
   Button,
   Paper,
-  Avatar,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
+  Avatar
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { adminLogin, createAdmin, checkAdminExists } from '../firebase/adminServices';
+import { adminLogin } from '../firebase/adminServices';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [openDialog, setOpenDialog] = useState(false);
-  const [createEmail, setCreateEmail] = useState('');
-  const [createPassword, setCreatePassword] = useState('');
-  const [createError, setCreateError] = useState('');
-  const [adminExists, setAdminExists] = useState(false);
-
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const exists = await checkAdminExists();
-      setAdminExists(exists);
-    };
-    checkAdmin();
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,26 +29,6 @@ const AdminLogin = () => {
     } catch (error) {
       console.error('Login error:', error);
       setError(error.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
-    }
-  };
-
-  const handleCreateAdmin = async () => {
-    setCreateError('');
-    if (!createEmail || !createPassword) {
-      setCreateError('Lütfen tüm alanları doldurun');
-      return;
-    }
-
-    try {
-      await createAdmin(createEmail, createPassword);
-      setOpenDialog(false);
-      setEmail(createEmail);
-      setPassword(createPassword);
-      setAdminExists(true);
-      alert('Admin kullanıcısı başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.');
-    } catch (error) {
-      console.error('Error creating admin:', error);
-      setCreateError(error.message || 'Admin oluşturulurken bir hata oluştu.');
     }
   };
 
@@ -126,51 +89,9 @@ const AdminLogin = () => {
             >
               Giriş Yap
             </Button>
-            {!adminExists && (
-              <Button
-                fullWidth
-                variant="outlined"
-                sx={{ mt: 2 }}
-                onClick={() => setOpenDialog(true)}
-              >
-                Admin Oluştur
-              </Button>
-            )}
           </Box>
         </Paper>
       </Box>
-
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>Admin Oluştur</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="E-posta Adresi"
-            type="email"
-            fullWidth
-            value={createEmail}
-            onChange={(e) => setCreateEmail(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            label="Şifre"
-            type="password"
-            fullWidth
-            value={createPassword}
-            onChange={(e) => setCreatePassword(e.target.value)}
-          />
-          {createError && (
-            <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-              {createError}
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>İptal</Button>
-          <Button onClick={handleCreateAdmin} variant="contained">Oluştur</Button>
-        </DialogActions>
-      </Dialog>
     </Container>
   );
 };

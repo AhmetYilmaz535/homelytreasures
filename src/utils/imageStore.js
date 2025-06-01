@@ -33,20 +33,20 @@ const MAX_IMAGES = 10;
 // Varsayılan ayarlar
 export const defaultSettings = {
   autoplay: true,
-  autoplaySpeed: 3000,
+  autoplaySpeed: 6000,
   effects: {
     kenBurns: {
-      enabled: false,
+      enabled: true,
       duration: 15000,
-      zoomRange: { min: 1.0, max: 1.1 }
+      scale: 1.1
     },
     transition: {
-      duration: 500,
-      blurAmount: 3,
-      darkOverlay: 0.1
+      enabled: true,
+      duration: 800,
+      darkOverlay: 0.3
     },
     filmGrain: {
-      enabled: false,
+      enabled: true,
       opacity: 0.03,
       animationSpeed: 8
     }
