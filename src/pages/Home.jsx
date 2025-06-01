@@ -1,34 +1,65 @@
-import React from 'react';
-import { Box, Typography, Container } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Container, CircularProgress } from '@mui/material';
 import ImageSlider from '../components/ImageSlider';
+import { getSliderSettings } from '../utils/imageStore';
 
 const Home = () => {
+  const [settings, setSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const sliderSettings = await getSliderSettings();
+        setSettings(sliderSettings);
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSettings();
+    window.addEventListener('settingsChanged', loadSettings);
+    return () => window.removeEventListener('settingsChanged', loadSettings);
+  }, []);
+
+  if (loading || !settings) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  const { texts } = settings;
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ mb: 6 }}>
         <Typography 
           variant="h1" 
           sx={{ 
-            fontSize: '2.5rem',
-            fontWeight: 600,
+            fontSize: texts.heading.fontSize + 'px',
+            fontWeight: texts.heading.fontWeight,
             mb: 2,
-            color: 'primary.main',
+            color: texts.heading.color,
             textAlign: 'center'
           }}
         >
-          Welcome to The Homely Treasures
+          {texts.heading.text}
         </Typography>
         <Typography 
           variant="h2" 
           sx={{ 
-            fontSize: '1.5rem',
-            fontWeight: 400,
+            fontSize: texts.subheading.fontSize + 'px',
+            fontWeight: texts.subheading.fontWeight,
             mb: 4,
-            color: 'text.secondary',
+            color: texts.subheading.color,
             textAlign: 'center'
           }}
         >
-          Discover our unique collection of home decor
+          {texts.subheading.text}
         </Typography>
       </Box>
 
@@ -40,27 +71,23 @@ const Home = () => {
         <Typography 
           variant="h3" 
           sx={{ 
-            fontSize: '2rem',
+            fontSize: texts.about.titleSize + 'px',
             fontWeight: 600,
             mb: 3,
-            color: 'primary.main'
+            color: texts.about.titleColor
           }}
         >
-          About Us
+          {texts.about.title}
         </Typography>
         <Typography 
           variant="body1" 
           sx={{ 
             fontSize: '1.1rem',
             lineHeight: 1.8,
-            color: 'text.secondary'
+            color: texts.about.textColor
           }}
-        >
-          Welcome to The Homely Treasures, your premier destination for unique and carefully curated home products. 
-          We believe that every home tells a story, and our collection is designed to help you tell yours. 
-          From elegant decor pieces to functional furnishings, each item in our collection is selected with care 
-          and attention to quality, design, and sustainability.
-        </Typography>
+          dangerouslySetInnerHTML={{ __html: texts.about.text }}
+        />
       </Box>
     </Container>
   );

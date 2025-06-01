@@ -196,18 +196,6 @@ const ImageSlider = () => {
           <ArrowForward />
         </IconButton>
       </Paper>
-      <Typography 
-        sx={{ 
-          mt: 2, 
-          p: 2, 
-          bgcolor: '#f5f5f5', 
-          borderRadius: 1,
-          fontFamily: 'monospace',
-          wordBreak: 'break-all'
-        }}
-      >
-        Resim Yolu: {images[currentIndex].path}
-      </Typography>
     </Box>
   );
 };
