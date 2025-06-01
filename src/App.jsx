@@ -144,13 +144,13 @@ const Header = () => {
             variant="h6" 
             component="div" 
             sx={{ 
-              fontSize: '20px',
-              fontWeight: 700,
-              color: 'primary.main',
+              fontSize: settings?.texts?.header?.fontSize || '20px',
+              fontWeight: settings?.texts?.header?.fontWeight || 700,
+              color: settings?.texts?.header?.color || 'primary.main',
               mr: 2
             }}
           >
-            The Homely Treasures
+            {settings?.texts?.header?.text || 'The Homely Treasures'}
           </Typography>
         </Box>
         {!isHomePage && (
