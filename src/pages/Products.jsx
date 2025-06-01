@@ -112,29 +112,29 @@ const Products = () => {
 
   const handleSave = () => {
     if (!currentProduct.name.trim()) {
-      showSnackbar('Lütfen ürün adını giriniz!', 'error');
+      showSnackbar('Please enter a product name!', 'error');
       return;
     }
 
     if (currentProduct.images.length === 0) {
-      showSnackbar('Lütfen en az bir resim yükleyiniz!', 'error');
+      showSnackbar('Please upload at least one image!', 'error');
       return;
     }
 
     if (currentProduct.id) {
-      // Güncelleme
+      // Update
       setProducts(prev =>
         prev.map(p => p.id === currentProduct.id ? currentProduct : p)
       );
-      showSnackbar('Ürün başarıyla güncellendi!', 'success');
+      showSnackbar('Product updated successfully!', 'success');
     } else {
-      // Yeni ürün ekleme
+      // Add new product
       const newProduct = {
         ...currentProduct,
         id: Date.now()
       };
       setProducts(prev => [...prev, newProduct]);
-      showSnackbar('Ürün başarıyla eklendi!', 'success');
+      showSnackbar('Product added successfully!', 'success');
     }
     handleCloseDialog();
   };
@@ -165,13 +165,13 @@ const Products = () => {
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h5">Ürün Yönetimi</Typography>
+          <Typography variant="h5">Product Management</Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
           >
-            Yeni Ürün Ekle
+            Add New Product
           </Button>
         </Box>
 
@@ -207,7 +207,7 @@ const Products = () => {
                     {product.description}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Resim Sayısı: {product.images.length}
+                    Number of Images: {product.images.length}
                   </Typography>
                   <FormControlLabel
                     control={
@@ -217,7 +217,7 @@ const Products = () => {
                         color="primary"
                       />
                     }
-                    label={product.isActive ? 'Aktif' : 'Pasif'}
+                    label={product.isActive ? 'Active' : 'Inactive'}
                   />
                 </CardContent>
                 <CardActions>
@@ -240,10 +240,10 @@ const Products = () => {
         </Grid>
       </Paper>
 
-      {/* Ürün Ekleme/Düzenleme Dialog */}
+      {/* Add/Edit Product Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {currentProduct.id ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'}
+          {currentProduct.id ? 'Edit Product' : 'Add New Product'}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
@@ -251,7 +251,7 @@ const Products = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Ürün Adı"
+                  label="Product Name"
                   name="name"
                   value={currentProduct.name}
                   onChange={handleInputChange}
@@ -260,7 +260,7 @@ const Products = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Amazon Ürün Linki"
+                  label="Amazon Product Link"
                   name="amazonLink"
                   value={currentProduct.amazonLink}
                   onChange={handleInputChange}
@@ -270,7 +270,7 @@ const Products = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Açıklama"
+                  label="Description"
                   name="description"
                   multiline
                   rows={3}
@@ -294,21 +294,21 @@ const Products = () => {
                     startIcon={<ImageIcon />}
                     fullWidth
                   >
-                    Resim Yükle (Çoklu Seçim)
+                    Upload Images (Multiple)
                   </Button>
                 </label>
               </Grid>
               {currentProduct.images.length > 0 && (
                 <Grid item xs={12}>
                   <Typography variant="subtitle1" gutterBottom>
-                    Yüklenen Resimler
+                    Uploaded Images
                   </Typography>
                   <ImageList cols={3} rowHeight={200} gap={8}>
                     {currentProduct.images.map((image, index) => (
                       <ImageListItem key={index}>
                         <img
                           src={image}
-                          alt={`Resim ${index + 1}`}
+                          alt={`Image ${index + 1}`}
                           loading="lazy"
                           style={{ height: '200px', objectFit: 'cover' }}
                         />
@@ -340,16 +340,16 @@ const Products = () => {
                       color="primary"
                     />
                   }
-                  label="Ürün Aktif"
+                  label="Product Active"
                 />
               </Grid>
             </Grid>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>İptal</Button>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleSave} variant="contained" color="primary">
-            Kaydet
+            Save
           </Button>
         </DialogActions>
       </Dialog>

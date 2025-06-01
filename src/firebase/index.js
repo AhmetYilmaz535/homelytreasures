@@ -83,6 +83,15 @@ const initializeDatabase = async () => {
 
 // Varsayılan ayarlar
 const defaultSettings = {
+  autoplay: true,
+  autoplaySpeed: 6000,
+  logo: {
+    enabled: true,
+    path: '',
+    alt: 'The Homely Treasures',
+    width: 150,
+    height: 50
+  },
   texts: {
     header: {
       text: 'The Homely Treasures',
@@ -96,12 +105,19 @@ const defaultSettings = {
       fontSize: 32,
       fontWeight: 600
     },
+    subheading: {
+      text: 'Discover Unique Home Decor',
+      color: '#666666',
+      fontSize: 20,
+      fontWeight: 400
+    },
     about: {
       title: 'About Us',
-      text: 'Welcome to The Homely Treasures, your premier destination for unique and carefully curated home products.',
+      content: 'Welcome to The Homely Treasures, your premier destination for unique and carefully curated home decor. We bring you a handpicked selection of beautiful items that will transform your living space into a cozy and stylish sanctuary.',
       titleColor: '#000000',
       textColor: '#666666',
-      titleSize: 28
+      titleSize: 28,
+      textSize: 16
     }
   },
   effects: {

@@ -79,21 +79,26 @@ const Home = () => {
           sx={{ 
             fontSize: texts.about.titleSize + 'px',
             fontWeight: 600,
-            mb: 3,
-            color: texts.about.titleColor
+            mb: 2,
+            color: texts.about.titleColor,
+            textAlign: 'center'
           }}
         >
-          {texts.about.title}
+          About Us
         </Typography>
         <Typography 
-          variant="body1" 
+          variant="body1"
           sx={{ 
-            fontSize: '1.1rem',
-            lineHeight: 1.8,
-            color: texts.about.textColor
+            fontSize: texts.about.textSize + 'px',
+            color: texts.about.textColor,
+            textAlign: 'center',
+            maxWidth: '800px',
+            mx: 'auto',
+            lineHeight: 1.8
           }}
-          dangerouslySetInnerHTML={{ __html: texts.about.text }}
-        />
+        >
+          {texts.about.content}
+        </Typography>
       </Box>
 
       <Box sx={{ mb: 6 }}>
@@ -107,7 +112,7 @@ const Home = () => {
             textAlign: 'center'
           }}
         >
-          Ürünlerimiz
+          Our Products
         </Typography>
         <Grid container spacing={3}>
           {products.filter(product => product.isActive).map((product) => (
@@ -141,7 +146,7 @@ const Home = () => {
                       color="primary"
                       fullWidth
                     >
-                      Amazon'da Görüntüle
+                      View on Amazon
                     </Button>
                   </Box>
                 )}

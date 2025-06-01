@@ -13,13 +13,13 @@ import { getSliderSettings } from '../utils/imageStore';
 const Footer = () => {
   const [footerSettings, setFooterSettings] = useState({
     leftText: {
-      text: "© 2024 Image Slider. Tüm hakları saklıdır.",
+      text: "© 2024 The Homely Treasures. All rights reserved.",
       color: "#666666",
       fontSize: 14,
       fontWeight: 400
     },
     rightText: {
-      text: "İletişim: info@imageslider.com",
+      text: "Contact: info@homelytreasures.com",
       color: "#666666",
       fontSize: 14,
       fontWeight: 400
