@@ -126,10 +126,12 @@ export const getAllAvailableImages = async () => {
     const imagesRef = collection(db, 'images');
     const q = query(imagesRef, orderBy('order', 'asc'));
     const snapshot = await getDocs(q);
-    const images = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const images = snapshot.docs
+      .filter(doc => doc.id !== '_init') // _init belgesini filtrele
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
     return images;
   } catch (error) {
     console.error('Error getting available images:', error);
@@ -162,17 +164,25 @@ export const saveSelectedImages = async (images) => {
     const selectedImagesRef = collection(db, 'selectedImages');
     const selectedImagesSnapshot = await getDocs(selectedImagesRef);
     selectedImagesSnapshot.docs.forEach(doc => {
-      batch.delete(doc.ref);
+      // _init belgesini silme
+      if (doc.id !== '_init') {
+        batch.delete(doc.ref);
+      }
     });
     
     // Yeni seçili resimleri ekle
     images.forEach(image => {
+      // _init belgesini atlayarak devam et
+      if (image.id === '_init') return;
+      
       const imageRef = doc(db, 'selectedImages', image.id);
-      batch.set(imageRef, {
-        id: image.id,
-        path: image.path,
+      // Undefined değerleri kontrol et
+      const imageData = {
+        id: image.id || '',
+        path: image.path || '',
         order: image.order || 1
-      });
+      };
+      batch.set(imageRef, imageData);
     });
     
     await batch.commit();
@@ -325,8 +335,24 @@ export const getSliderSettings = async () => {
     }
 
     // Seçili resimleri al
-    const selectedImages = await getSelectedImages();
-    const availableImages = await getAllAvailableImages();
+    const selectedImagesRef = collection(db, 'selectedImages');
+    const selectedImagesSnapshot = await getDocs(selectedImagesRef);
+    const selectedImages = selectedImagesSnapshot.docs
+      .filter(doc => doc.id !== '_init') // _init belgesini filtrele
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+    // Tüm mevcut resimleri al
+    const availableImagesRef = collection(db, 'images');
+    const availableImagesSnapshot = await getDocs(availableImagesRef);
+    const availableImages = availableImagesSnapshot.docs
+      .filter(doc => doc.id !== '_init') // _init belgesini filtrele
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
     
     // Seçili resimlerin tam bilgilerini al
     const selectedImagesWithDetails = selectedImages.map(selectedImage => {
