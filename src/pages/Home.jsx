@@ -114,6 +114,20 @@ const Home = () => {
         >
           Our Products
         </Typography>
+        <Typography 
+          variant="body1"
+          sx={{ 
+            mb: 4,
+            color: texts.about.textColor,
+            textAlign: 'center'
+          }}
+        >
+          Loaded Products Count: {products.length} {/* Debug için ürün sayısı */}
+          {products.length > 0 ? 
+            ` | First Product Name: ${products[0]?.name || 'No name'}` : 
+            ' | No products found'
+          }
+        </Typography>
         <Grid container spacing={4}>
           {products.map((product) => (
             <Grid item xs={12} sm={6} md={4} key={product.id}>
