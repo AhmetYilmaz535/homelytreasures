@@ -1024,14 +1024,6 @@ const Settings = () => {
             <Typography variant="subtitle1" gutterBottom>About Bölümü</Typography>
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Başlık"
-                  value={settings.texts?.about?.title || 'About'}
-                  onChange={(e) => handleSettingChange('texts', 'about', 'title', e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                   Metin (HTML formatında düzenleyebilirsiniz)
                 </Typography>
@@ -1051,54 +1043,6 @@ const Settings = () => {
                     ]
                   }}
                   style={{ height: '200px', marginBottom: '50px' }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
-                  label="Başlık Rengi"
-                  type="color"
-                  value={settings.texts?.about?.titleColor || '#A67C52'}
-                  onChange={(e) => handleSettingChange('texts', 'about', 'titleColor', e.target.value)}
-                  sx={{ 
-                    '& input': { 
-                      height: 40, 
-                      cursor: 'pointer',
-                      padding: '4px 8px'
-                    },
-                    '& .MuiOutlinedInput-root': {
-                      padding: '8px'
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
-                  label="Metin Rengi"
-                  type="color"
-                  value={settings.texts?.about?.textColor || '#666666'}
-                  onChange={(e) => handleSettingChange('texts', 'about', 'textColor', e.target.value)}
-                  sx={{ 
-                    '& input': { 
-                      height: 40, 
-                      cursor: 'pointer',
-                      padding: '4px 8px'
-                    },
-                    '& .MuiOutlinedInput-root': {
-                      padding: '8px'
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
-                  label="Başlık Boyutu"
-                  type="number"
-                  value={settings.texts?.about?.titleSize || 32}
-                  onChange={(e) => handleSettingChange('texts', 'about', 'titleSize', parseInt(e.target.value))}
-                  InputProps={{ inputProps: { min: 16, max: 48 } }}
                 />
               </Grid>
             </Grid>

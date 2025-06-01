@@ -47,77 +47,24 @@ const Home = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ mb: 6 }}>
-        <Typography 
-          variant="h1" 
-          sx={{ 
-            fontSize: texts.heading.fontSize + 'px',
-            fontWeight: texts.heading.fontWeight,
-            mb: 2,
-            color: texts.heading.color,
-            textAlign: 'center'
-          }}
-        >
-          {texts.heading.text}
-        </Typography>
-        <Typography 
-          variant="h2" 
-          sx={{ 
-            fontSize: texts.subheading.fontSize + 'px',
-            fontWeight: texts.subheading.fontWeight,
-            mb: 4,
-            color: texts.subheading.color,
-            textAlign: 'center'
-          }}
-        >
-          {texts.subheading.text}
-        </Typography>
-      </Box>
-
-      <Box sx={{ mb: 6 }}>
         <ImageSlider images={mainImages} settings={settings} height={400} autoPlay={true} />
       </Box>
 
       <Box sx={{ mb: 6 }}>
         <Typography 
-          variant="h3" 
-          sx={{ 
-            fontSize: texts.about.titleSize + 'px',
-            fontWeight: 600,
-            mb: 2,
-            color: texts.about.titleColor,
-            textAlign: 'center'
-          }}
-        >
-          About Us
-        </Typography>
-        <Typography 
           variant="body1"
           sx={{ 
-            fontSize: texts.about.textSize + 'px',
             color: texts.about.textColor,
             textAlign: 'center',
             maxWidth: '800px',
             mx: 'auto',
             lineHeight: 1.8
           }}
-        >
-          {texts.about.content}
-        </Typography>
+          dangerouslySetInnerHTML={{ __html: texts.about.text || '' }}
+        />
       </Box>
 
       <Box sx={{ mb: 6 }}>
-        <Typography 
-          variant="h3" 
-          sx={{ 
-            fontSize: texts.about.titleSize + 'px',
-            fontWeight: 600,
-            mb: 4,
-            color: texts.about.titleColor,
-            textAlign: 'center'
-          }}
-        >
-          Our Products
-        </Typography>
         <Grid container spacing={4}>
           {products.map((product) => (
             <Grid item xs={12} sm={6} md={4} key={product.id}>
