@@ -52,7 +52,8 @@ const Home = () => {
       </Box>
 
       <Box sx={{ mb: 6 }}>
-        <div 
+        <div
+          dangerouslySetInnerHTML={{ __html: texts.about.text }}
           style={{ 
             color: texts.about.textColor,
             textAlign: 'center',
@@ -60,9 +61,7 @@ const Home = () => {
             margin: '0 auto',
             lineHeight: 1.8
           }}
-        >
-          {parse(texts.about.text || '')}
-        </div>
+        />
       </Box>
 
       <Box sx={{ mb: 6 }}>
