@@ -352,7 +352,33 @@ export const getSliderSettings = async () => {
     
     // Ayarları al
     const settingsDoc = await getDoc(doc(db, 'settings', 'sliderSettings'));
-    const currentSettings = settingsDoc.exists() ? settingsDoc.data() : defaultSettings;
+    let currentSettings = settingsDoc.exists() ? settingsDoc.data() : defaultSettings;
+    
+    // Eksik ayarları varsayılan değerlerle doldur
+    currentSettings = {
+      ...defaultSettings,
+      ...currentSettings,
+      texts: {
+        ...defaultSettings.texts,
+        ...currentSettings.texts,
+        heading: {
+          ...defaultSettings.texts.heading,
+          ...currentSettings.texts?.heading
+        },
+        subheading: {
+          ...defaultSettings.texts.subheading,
+          ...currentSettings.texts?.subheading
+        },
+        header: {
+          ...defaultSettings.texts.header,
+          ...currentSettings.texts?.header
+        },
+        about: {
+          ...defaultSettings.texts.about,
+          ...currentSettings.texts?.about
+        }
+      }
+    };
     
     // Seçili resimleri al
     const selectedImagesRef = collection(db, 'selectedImages');
@@ -367,7 +393,7 @@ export const getSliderSettings = async () => {
     // Eğer hiç ayar yoksa varsayılan ayarları kullan
     if (!settingsDoc.exists()) {
       console.log('No settings found, using defaults...');
-      await setDoc(doc(db, 'settings', 'sliderSettings'), defaultSettings);
+      await setDoc(doc(db, 'settings', 'sliderSettings'), currentSettings);
     }
     
     // Ayarları döndür
