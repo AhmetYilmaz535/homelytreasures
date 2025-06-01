@@ -310,22 +310,34 @@ const getImageDimensions = (file) => {
 // Slider ayarlarını al
 export const getSliderSettings = async () => {
   try {
+    // Ayarları al
     const settingsDoc = await getDoc(doc(db, 'settings', 'sliderSettings'));
-    
-    if (!settingsDoc.exists()) {
+    let settings = settingsDoc.exists() ? settingsDoc.data() : defaultSettings;
+
+    // Seçili resimleri al
+    const selectedImagesRef = collection(db, 'selectedImages');
+    const selectedImagesSnapshot = await getDocs(selectedImagesRef);
+    const selectedImages = selectedImagesSnapshot.docs
+      .filter(doc => doc.id !== '_init')
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+    // Eğer seçili resim yoksa ve ayarlar yeni oluşturulduysa, varsayılan resimleri kaydet
+    if (selectedImages.length === 0 && !settingsDoc.exists()) {
       // Varsayılan ayarları kaydet
       await setDoc(doc(db, 'settings', 'sliderSettings'), defaultSettings);
       
       // Varsayılan resimleri kaydet
       const batch = writeBatch(db);
-      defaultImages.forEach(image => {
-        const imageRef = doc(db, 'images', `default_${image.id}`);
+      for (const image of defaultImages) {
+        const imageRef = doc(db, 'images', image.id);
         batch.set(imageRef, image);
         
-        // Aynı zamanda seçili resimler olarak da ekle
-        const selectedImageRef = doc(db, 'selectedImages', `default_${image.id}`);
+        const selectedImageRef = doc(db, 'selectedImages', image.id);
         batch.set(selectedImageRef, image);
-      });
+      }
       await batch.commit();
       
       return {
@@ -334,39 +346,17 @@ export const getSliderSettings = async () => {
       };
     }
 
-    // Seçili resimleri al
-    const selectedImagesRef = collection(db, 'selectedImages');
-    const selectedImagesSnapshot = await getDocs(selectedImagesRef);
-    const selectedImages = selectedImagesSnapshot.docs
-      .filter(doc => doc.id !== '_init') // _init belgesini filtrele
-      .map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-    // Tüm mevcut resimleri al
-    const availableImagesRef = collection(db, 'images');
-    const availableImagesSnapshot = await getDocs(availableImagesRef);
-    const availableImages = availableImagesSnapshot.docs
-      .filter(doc => doc.id !== '_init') // _init belgesini filtrele
-      .map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-    
-    // Seçili resimlerin tam bilgilerini al
-    const selectedImagesWithDetails = selectedImages.map(selectedImage => {
-      const fullImage = availableImages.find(img => img.id === selectedImage.id);
-      return fullImage || selectedImage;
-    });
-    
+    // Seçili resimleri ayarlara ekle
     return {
-      ...settingsDoc.data(),
-      images: selectedImagesWithDetails
+      ...settings,
+      images: selectedImages.length > 0 ? selectedImages : defaultImages
     };
   } catch (error) {
     console.error('Error getting slider settings:', error);
-    return defaultSettings;
+    return {
+      ...defaultSettings,
+      images: defaultImages
+    };
   }
 };
 
