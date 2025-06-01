@@ -282,7 +282,7 @@ const Settings = () => {
     }
   };
 
-  const handleSettingChange = async (section, subsection, key, value) => {
+  const handleSettingChange = (section, subsection, key, value) => {
     try {
       console.log('Updating settings:', { section, subsection, key, value });
       const newSettings = { ...settings };
@@ -293,97 +293,37 @@ const Settings = () => {
       }
       
       // Sadece değişen ayarı güncelle
-      let updateData = {};
-      
       if (section === 'effects') {
-        updateData = {
-          effects: {
-            ...settings.effects,
-            [subsection]: {
-              ...settings.effects[subsection],
-              [key]: value
-            }
-          }
-        };
+        newSettings.effects[subsection][key] = value;
       } else if (section === 'texts') {
-        updateData = {
-          texts: {
-            ...settings.texts,
-            [subsection]: {
-              ...settings.texts[subsection],
-              [key]: value
-            }
-          }
-        };
+        if (!newSettings.texts[subsection]) {
+          newSettings.texts[subsection] = {};
+        }
+        newSettings.texts[subsection][key] = value;
       } else if (section === 'footer') {
         if (subsection === 'socialMedia' && key.includes('.')) {
           const [platform, field] = key.split('.');
-          updateData = {
-            footer: {
-              ...settings.footer,
-              socialMedia: {
-                ...settings.footer.socialMedia,
-                [platform]: {
-                  ...settings.footer.socialMedia[platform],
-                  [field]: value
-                }
-              }
-            }
-          };
+          if (!newSettings.footer.socialMedia[platform]) {
+            newSettings.footer.socialMedia[platform] = {};
+          }
+          newSettings.footer.socialMedia[platform][field] = value;
         } else {
-          updateData = {
-            footer: {
-              ...settings.footer,
-              [subsection]: {
-                ...settings.footer[subsection],
-                [key]: value
-              }
-            }
-          };
+          if (!newSettings.footer[subsection]) {
+            newSettings.footer[subsection] = {};
+          }
+          newSettings.footer[subsection][key] = value;
         }
       } else if (section === 'logo') {
-        // Logo ayarlarını güncelle
-        updateData = {
-          logo: {
-            ...settings.logo,
-            [key]: value || '' // undefined yerine boş string kullan
-          }
-        };
-      } else {
-        // Genel ayarlar için
-        updateData = {
-          [key]: value
-        };
-      }
-      
-      // Firebase'e kaydet
-      const result = await updateSliderSettings(updateData);
-      
-      if (result) {
-        // Yerel state'i güncelle
-        if (section === 'effects') {
-          newSettings.effects[subsection][key] = value;
-        } else if (section === 'texts') {
-          newSettings.texts[subsection][key] = value;
-        } else if (section === 'footer') {
-          if (subsection === 'socialMedia' && key.includes('.')) {
-            const [platform, field] = key.split('.');
-            newSettings.footer.socialMedia[platform][field] = value;
-          } else {
-            newSettings.footer[subsection][key] = value;
-          }
-        } else if (section === 'logo') {
-          if (!newSettings.logo) {
-            newSettings.logo = {};
-          }
-          newSettings.logo[key] = value || ''; // undefined yerine boş string kullan
-        } else {
-          newSettings[key] = value;
+        if (!newSettings.logo) {
+          newSettings.logo = {};
         }
-        
-        setSettings(newSettings);
-        setUnsavedChanges(true);
+        newSettings.logo[key] = value || '';
+      } else {
+        newSettings[key] = value;
       }
+      
+      setSettings(newSettings);
+      setUnsavedChanges(true);
     } catch (error) {
       console.error('Error updating settings:', error);
       console.error('Error details:', {
@@ -402,6 +342,9 @@ const Settings = () => {
       if (result) {
         setUnsavedChanges(false);
         showMessage('Ayarlar başarıyla kaydedildi!');
+        
+        // Diğer componentleri haberdar et
+        window.dispatchEvent(new Event('settingsChanged'));
       } else {
         throw new Error('Ayarlar kaydedilemedi.');
       }
