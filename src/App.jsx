@@ -135,7 +135,8 @@ const Header = () => {
               sx={{
                 width: settings.logo.width ? `${settings.logo.width}px` : '150px',
                 height: settings.logo.height ? `${settings.logo.height}px` : '50px',
-                objectFit: 'contain'
+                objectFit: 'contain',
+                mr: 2
               }}
             />
           ) : (
@@ -145,7 +146,8 @@ const Header = () => {
               sx={{ 
                 fontSize: '20px',
                 fontWeight: 700,
-                color: 'primary.main'
+                color: 'primary.main',
+                mr: 2
               }}
             >
               The Homely Treasures
