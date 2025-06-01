@@ -132,26 +132,11 @@ const Home = () => {
                 }}
               >
                 {product.images && product.images.length > 0 && (
-                  <CardMedia
-                    component="img"
-                    height="280"
-                    image={product.images[0]}
-                    alt={product.name}
-                    className={`
-                      slider-image
-                      ${settings?.effects?.kenBurns?.enabled ? 'ken-burns-active' : ''}
-                      ${settings?.effects?.filmGrain?.enabled ? 'film-grain' : ''}
-                    `}
-                    sx={{ 
-                      objectFit: 'cover',
-                      transition: 'transform 0.3s',
-                      '&:hover': {
-                        transform: 'scale(1.05)'
-                      },
-                      '--ken-burns-duration': `${settings?.effects?.kenBurns?.duration || 15000}ms`,
-                      '--grain-opacity': settings?.effects?.filmGrain?.opacity || 0.03,
-                      '--grain-speed': `${settings?.effects?.filmGrain?.animationSpeed || 8}s`
-                    }}
+                  <ImageSlider 
+                    images={product.images}
+                    settings={settings}
+                    height={280}
+                    autoPlay={false}
                   />
                 )}
                 <CardContent sx={{ flexGrow: 1, p: 3 }}>
