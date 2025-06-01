@@ -127,7 +127,7 @@ const Header = () => {
     }}>
       <Toolbar>
         <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-          {settings?.logo?.enabled && settings?.logo?.path ? (
+          {settings?.logo?.enabled && settings?.logo?.path && (
             <Box
               component="img"
               src={settings.logo.path}
@@ -139,20 +139,19 @@ const Header = () => {
                 mr: 2
               }}
             />
-          ) : (
-            <Typography 
-              variant="h6" 
-              component="div" 
-              sx={{ 
-                fontSize: '20px',
-                fontWeight: 700,
-                color: 'primary.main',
-                mr: 2
-              }}
-            >
-              The Homely Treasures
-            </Typography>
           )}
+          <Typography 
+            variant="h6" 
+            component="div" 
+            sx={{ 
+              fontSize: '20px',
+              fontWeight: 700,
+              color: 'primary.main',
+              mr: 2
+            }}
+          >
+            The Homely Treasures
+          </Typography>
         </Box>
         {!isHomePage && (
           <Box sx={{ display: 'flex', gap: 1 }}>
