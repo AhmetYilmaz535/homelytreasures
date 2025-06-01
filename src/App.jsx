@@ -13,6 +13,9 @@ import {
 import Home from './pages/Home';
 import Products from './pages/Products';
 import Footer from './components/Footer';
+import AdminPanel from './pages/AdminPanel';
+import AdminLogin from './pages/AdminLogin';
+import Settings from './pages/Settings';
 
 const theme = createTheme({
   palette: {
@@ -96,6 +99,9 @@ const theme = createTheme({
 const Header = () => {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
+  const isAdminPage = location.pathname.startsWith('/admin') || location.pathname === '/settings';
+
+  if (isAdminPage) return null;
 
   return (
     <AppBar position="static" elevation={0} sx={{ 
@@ -150,6 +156,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <Footer />
