@@ -21,7 +21,8 @@ import {
   Alert,
   Snackbar,
   ImageList,
-  ImageListItem
+  ImageListItem,
+  CircularProgress
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -30,6 +31,7 @@ import {
   Image as ImageIcon,
   DeleteForever as DeleteImageIcon
 } from '@mui/icons-material';
+import { saveProduct, getProducts, deleteProduct } from '../firebase/services';
 
 // Örnek ürün verisi
 const defaultProduct = {
@@ -42,11 +44,8 @@ const defaultProduct = {
 };
 
 const Products = () => {
-  const [products, setProducts] = useState(() => {
-    const savedProducts = localStorage.getItem('products');
-    return savedProducts ? JSON.parse(savedProducts) : [];
-  });
-  
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(defaultProduct);
   const [snackbar, setSnackbar] = useState({
@@ -56,8 +55,21 @@ const Products = () => {
   });
 
   useEffect(() => {
-    localStorage.setItem('products', JSON.stringify(products));
-  }, [products]);
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const productList = await getProducts();
+      setProducts(productList);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      showSnackbar('Ürünler yüklenirken bir hata oluştu!', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenDialog = (product = defaultProduct) => {
     setCurrentProduct(product);
@@ -110,47 +122,68 @@ const Products = () => {
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!currentProduct.name.trim()) {
-      showSnackbar('Please enter a product name!', 'error');
+      showSnackbar('Lütfen ürün adını girin!', 'error');
       return;
     }
 
     if (currentProduct.images.length === 0) {
-      showSnackbar('Please upload at least one image!', 'error');
+      showSnackbar('Lütfen en az bir resim yükleyin!', 'error');
       return;
     }
 
-    if (currentProduct.id) {
-      // Update
-      setProducts(prev =>
-        prev.map(p => p.id === currentProduct.id ? currentProduct : p)
-      );
-      showSnackbar('Product updated successfully!', 'success');
-    } else {
-      // Add new product
-      const newProduct = {
-        ...currentProduct,
-        id: Date.now()
-      };
-      setProducts(prev => [...prev, newProduct]);
-      showSnackbar('Product added successfully!', 'success');
+    try {
+      const success = await saveProduct(currentProduct);
+      if (success) {
+        showSnackbar(currentProduct.id ? 'Ürün güncellendi!' : 'Yeni ürün eklendi!', 'success');
+        loadProducts(); // Ürün listesini yeniden yükle
+        handleCloseDialog();
+      } else {
+        showSnackbar('Ürün kaydedilirken bir hata oluştu!', 'error');
+      }
+    } catch (error) {
+      console.error('Error saving product:', error);
+      showSnackbar('Ürün kaydedilirken bir hata oluştu!', 'error');
     }
-    handleCloseDialog();
   };
 
-  const handleDelete = (productId) => {
-    setProducts(prev => prev.filter(p => p.id !== productId));
-    showSnackbar('Ürün başarıyla silindi!', 'success');
+  const handleDelete = async (productId) => {
+    try {
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+
+      const success = await deleteProduct(productId, product.images);
+      if (success) {
+        showSnackbar('Ürün başarıyla silindi!', 'success');
+        loadProducts(); // Ürün listesini yeniden yükle
+      } else {
+        showSnackbar('Ürün silinirken bir hata oluştu!', 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      showSnackbar('Ürün silinirken bir hata oluştu!', 'error');
+    }
   };
 
-  const handleToggleActive = (productId) => {
-    setProducts(prev =>
-      prev.map(p =>
-        p.id === productId ? { ...p, isActive: !p.isActive } : p
-      )
-    );
-    showSnackbar('Ürün durumu güncellendi!', 'success');
+  const handleToggleActive = async (productId) => {
+    try {
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+
+      const updatedProduct = { ...product, isActive: !product.isActive };
+      const success = await saveProduct(updatedProduct);
+      
+      if (success) {
+        showSnackbar('Ürün durumu güncellendi!', 'success');
+        loadProducts(); // Ürün listesini yeniden yükle
+      } else {
+        showSnackbar('Ürün durumu güncellenirken bir hata oluştu!', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating product status:', error);
+      showSnackbar('Ürün durumu güncellenirken bir hata oluştu!', 'error');
+    }
   };
 
   const showSnackbar = (message, severity = 'success') => {
@@ -161,17 +194,25 @@ const Products = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h5">Product Management</Typography>
+          <Typography variant="h5">Ürün Yönetimi</Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
           >
-            Add New Product
+            Yeni Ürün Ekle
           </Button>
         </Box>
 
@@ -179,7 +220,7 @@ const Products = () => {
           {products.map(product => (
             <Grid item xs={12} sm={6} md={4} key={product.id}>
               <Card>
-                {product.images.length > 0 ? (
+                {product.images && product.images.length > 0 ? (
                   <CardMedia
                     component="img"
                     height="200"
@@ -207,7 +248,7 @@ const Products = () => {
                     {product.description}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Number of Images: {product.images.length}
+                    Resim Sayısı: {product.images ? product.images.length : 0}
                   </Typography>
                   <FormControlLabel
                     control={
@@ -217,7 +258,7 @@ const Products = () => {
                         color="primary"
                       />
                     }
-                    label={product.isActive ? 'Active' : 'Inactive'}
+                    label={product.isActive ? 'Aktif' : 'Pasif'}
                   />
                 </CardContent>
                 <CardActions>
@@ -240,10 +281,9 @@ const Products = () => {
         </Grid>
       </Paper>
 
-      {/* Add/Edit Product Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {currentProduct.id ? 'Edit Product' : 'Add New Product'}
+          {currentProduct.id ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
@@ -251,7 +291,7 @@ const Products = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Product Name"
+                  label="Ürün Adı"
                   name="name"
                   value={currentProduct.name}
                   onChange={handleInputChange}
@@ -260,7 +300,7 @@ const Products = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Amazon Product Link"
+                  label="Amazon Ürün Linki"
                   name="amazonLink"
                   value={currentProduct.amazonLink}
                   onChange={handleInputChange}
@@ -270,7 +310,7 @@ const Products = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Description"
+                  label="Açıklama"
                   name="description"
                   multiline
                   rows={3}
@@ -294,21 +334,21 @@ const Products = () => {
                     startIcon={<ImageIcon />}
                     fullWidth
                   >
-                    Upload Images (Multiple)
+                    Resim Yükle (Çoklu)
                   </Button>
                 </label>
               </Grid>
               {currentProduct.images.length > 0 && (
                 <Grid item xs={12}>
                   <Typography variant="subtitle1" gutterBottom>
-                    Uploaded Images
+                    Yüklenen Resimler
                   </Typography>
                   <ImageList cols={3} rowHeight={200} gap={8}>
                     {currentProduct.images.map((image, index) => (
                       <ImageListItem key={index}>
                         <img
                           src={image}
-                          alt={`Image ${index + 1}`}
+                          alt={`Resim ${index + 1}`}
                           loading="lazy"
                           style={{ height: '200px', objectFit: 'cover' }}
                         />
@@ -340,21 +380,20 @@ const Products = () => {
                       color="primary"
                     />
                   }
-                  label="Product Active"
+                  label="Ürün Aktif"
                 />
               </Grid>
             </Grid>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleCloseDialog}>İptal</Button>
           <Button onClick={handleSave} variant="contained" color="primary">
-            Save
+            Kaydet
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
