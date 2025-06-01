@@ -326,18 +326,21 @@ const Settings = () => {
   const handleResetEffects = async () => {
     try {
       setLoading(true);
-      const newSettings = {
-        ...settings,
-        autoplay: settings.autoplay ?? defaultSettings.autoplay,
-        autoplaySpeed: settings.autoplaySpeed ?? defaultSettings.autoplaySpeed,
-        effects: defaultSettings.effects
+      // Mevcut ayarları kopyala
+      const currentSettings = { ...settings };
+      
+      // Sadece effects kısmını varsayılan değerlerle değiştir
+      currentSettings.effects = {
+        kenBurns: { ...defaultSettings.effects.kenBurns },
+        transition: { ...defaultSettings.effects.transition },
+        filmGrain: { ...defaultSettings.effects.filmGrain }
       };
       
       // Firebase'e kaydet
-      const result = await updateSliderSettings(newSettings);
+      const result = await updateSliderSettings(currentSettings);
       
       if (result) {
-        setSettings(newSettings);
+        setSettings(currentSettings);
         setUnsavedChanges(false);
         showMessage('Efekt ayarları varsayılan değerlere döndürüldü ve kaydedildi.');
       } else {
