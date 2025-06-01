@@ -17,7 +17,9 @@ const ImageSlider = () => {
     const loadSettings = async () => {
       try {
         const sliderSettings = await getSliderSettings();
+        console.log('Loaded slider settings:', sliderSettings);
         if (sliderSettings) {
+          console.log('Setting images:', sliderSettings.images);
           setSettings(prev => ({
             ...prev,
             ...sliderSettings
