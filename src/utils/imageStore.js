@@ -31,7 +31,7 @@ const defaultImages = [
 const MAX_IMAGES = 10;
 
 // Varsayılan ayarlar
-const defaultSettings = {
+export const defaultSettings = {
   autoplay: true,
   autoplaySpeed: 3000,
   effects: {

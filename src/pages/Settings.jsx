@@ -27,7 +27,8 @@ import {
   ArrowUpward as ArrowUpIcon,
   ArrowDownward as ArrowDownIcon,
   Add as AddIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  RestartAlt as RestartAltIcon
 } from '@mui/icons-material';
 import {
   getAllAvailableImages,
@@ -37,7 +38,8 @@ import {
   updateImageOrder,
   getSliderSettings,
   updateSliderSettings,
-  deleteImage
+  deleteImage,
+  defaultSettings
 } from '../utils/imageStore';
 
 const SettingsSection = ({ title, children }) => (
@@ -321,6 +323,21 @@ const Settings = () => {
     }
   };
 
+  const handleResetEffects = async () => {
+    try {
+      const newSettings = {
+        ...settings,
+        effects: defaultSettings.effects
+      };
+      setSettings(newSettings);
+      setUnsavedChanges(true);
+      showMessage('Efekt ayarları varsayılan değerlere döndürüldü. Kaydetmek için "Değişiklikleri Kaydet" butonuna tıklayın.');
+    } catch (error) {
+      console.error('Error resetting effects:', error);
+      showMessage('Efekt ayarları sıfırlanırken bir hata oluştu: ' + error.message, 'error');
+    }
+  };
+
   if (!settings) return null;
 
   return (
@@ -336,6 +353,15 @@ const Settings = () => {
         justifyContent: 'flex-end',
         gap: 2
       }}>
+        <Button
+          variant="outlined"
+          color="warning"
+          startIcon={<RestartAltIcon />}
+          onClick={handleResetEffects}
+          disabled={loading}
+        >
+          Efektleri Sıfırla
+        </Button>
         <Button
           variant="contained"
           color="primary"

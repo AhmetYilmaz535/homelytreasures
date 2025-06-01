@@ -1,106 +1,66 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Grid, Paper } from '@mui/material';
+import React from 'react';
+import { Box, Typography, Container } from '@mui/material';
 import ImageSlider from '../components/ImageSlider';
-import { getSliderSettings } from '../utils/imageStore';
 
 const Home = () => {
-  const [settings, setSettings] = useState({
-    texts: {
-      heading: {
-        text: "Welcome to Our Store",
-        color: "#000000",
-        fontSize: 32,
-        fontWeight: 600
-      },
-      about: {
-        title: "About Us",
-        text: "Welcome to The Homely Treasures, your premier destination for unique and carefully curated home products.",
-        titleColor: "#000000",
-        textColor: "#666666",
-        titleSize: 28
-      }
-    }
-  });
-
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const sliderSettings = await getSliderSettings();
-        if (sliderSettings) {
-          setSettings(sliderSettings);
-        }
-      } catch (error) {
-        console.error('Error loading settings:', error);
-      }
-    };
-
-    loadSettings();
-    window.addEventListener('settingsChanged', loadSettings);
-    return () => window.removeEventListener('settingsChanged', loadSettings);
-  }, []);
-
   return (
     <Container maxWidth="lg">
-      {/* Hero Section with Slider */}
-      <Box sx={{ my: 4 }}>
-        <Typography
-          variant="h1"
-          component="h1"
-          sx={{
-            fontSize: settings.texts.heading.fontSize,
-            fontWeight: settings.texts.heading.fontWeight,
-            color: settings.texts.heading.color,
+      <Box sx={{ mb: 6 }}>
+        <Typography 
+          variant="h1" 
+          sx={{ 
+            fontSize: '2.5rem',
+            fontWeight: 600,
             mb: 2,
+            color: 'primary.main',
             textAlign: 'center'
           }}
         >
-          {settings.texts.heading.text}
+          Welcome to The Homely Treasures
         </Typography>
+        <Typography 
+          variant="h2" 
+          sx={{ 
+            fontSize: '1.5rem',
+            fontWeight: 400,
+            mb: 4,
+            color: 'text.secondary',
+            textAlign: 'center'
+          }}
+        >
+          Discover our unique collection of home decor
+        </Typography>
+      </Box>
+
+      <Box sx={{ mb: 6 }}>
         <ImageSlider />
       </Box>
 
-      {/* About Section */}
-      <Paper elevation={0} sx={{ p: 4, mb: 4, borderRadius: 2, backgroundColor: 'background.paper' }}>
-        <Typography
-          variant="h2"
-          component="h2"
-          sx={{
-            fontSize: settings.texts.about.titleSize,
-            color: settings.texts.about.titleColor,
-            mb: 2
-          }}
-        >
-          {settings.texts.about.title}
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            color: settings.texts.about.textColor,
-            fontSize: 16,
-            lineHeight: 1.6
-          }}
-        >
-          {settings.texts.about.text}
-        </Typography>
-      </Paper>
-
-      {/* Products Preview Section */}
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h2"
-          component="h2"
-          sx={{
-            fontSize: 28,
-            color: 'text.primary',
+      <Box sx={{ mb: 6 }}>
+        <Typography 
+          variant="h3" 
+          sx={{ 
+            fontSize: '2rem',
+            fontWeight: 600,
             mb: 3,
-            textAlign: 'center'
+            color: 'primary.main'
           }}
         >
-          Featured Products
+          About Us
         </Typography>
-        <Grid container spacing={3}>
-          {/* Product cards will be dynamically loaded here */}
-        </Grid>
+        <Typography 
+          variant="body1" 
+          sx={{ 
+            fontSize: '1.1rem',
+            lineHeight: 1.8,
+            color: 'text.secondary'
+          }}
+        >
+          Welcome to The Homely Treasures, your premier destination for unique and carefully curated home products. 
+          We believe that every home tells a story, and our collection is designed to help you tell yours. 
+          From elegant decor pieces to functional furnishings, each item in our collection is selected with care 
+          and attention to quality, design, and sustainability.
+        </Typography>
       </Box>
     </Container>
   );

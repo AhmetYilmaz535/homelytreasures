@@ -2,7 +2,8 @@ import { initializeApp } from 'firebase/app';
 import { 
   getFirestore,
   initializeFirestore,
-  CACHE_SIZE_UNLIMITED
+  CACHE_SIZE_UNLIMITED,
+  enableIndexedDbPersistence
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
@@ -45,6 +46,21 @@ try {
   console.error('Error initializing Firebase:', error);
   throw error;
 }
+
+// Firebase bağlantı durumunu kontrol et
+const checkFirebaseConnection = async () => {
+  try {
+    await enableIndexedDbPersistence(db);
+    console.log('Firebase connection successful');
+    return true;
+  } catch (error) {
+    console.error('Firebase connection error:', error);
+    return false;
+  }
+};
+
+// Bağlantıyı kontrol et
+checkFirebaseConnection();
 
 // Veritabanını başlat
 const initializeDatabase = async () => {
