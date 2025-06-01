@@ -8,6 +8,7 @@ const ImageSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [settings, setSettings] = useState(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [kenBurnsKey, setKenBurnsKey] = useState(0);
 
   useEffect(() => {
     const loadImagesAndSettings = async () => {
@@ -41,6 +42,7 @@ const ImageSlider = () => {
   const handleTransition = (newIndex) => {
     setIsTransitioning(true);
     setCurrentIndex(newIndex);
+    setKenBurnsKey(prev => prev + 1);
     setTimeout(() => setIsTransitioning(false), settings?.effects?.transition?.duration || 500);
   };
 
@@ -68,23 +70,13 @@ const ImageSlider = () => {
     const duration = effects.kenBurns.duration || 20000;
     
     return {
-      animation: `kenBurns${currentIndex} ${duration}ms ease-in-out`,
-      '@keyframes kenBurns0': {
+      animation: `kenBurns ${duration}ms ease-in-out`,
+      '@keyframes kenBurns': {
         '0%': { transform: `scale(${zoomRange.min})` },
         '100%': { transform: `scale(${zoomRange.max})` }
       },
-      '@keyframes kenBurns1': {
-        '0%': { transform: `scale(${zoomRange.max})` },
-        '100%': { transform: `scale(${zoomRange.min})` }
-      },
-      '@keyframes kenBurns2': {
-        '0%': { transform: `scale(${zoomRange.min})` },
-        '100%': { transform: `scale(${zoomRange.max})` }
-      },
-      '@keyframes kenBurns3': {
-        '0%': { transform: `scale(${zoomRange.max})` },
-        '100%': { transform: `scale(${zoomRange.min})` }
-      }
+      animationFillMode: 'forwards',
+      key: kenBurnsKey
     };
   };
 
