@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Box, IconButton, Paper } from '@mui/material';
+import { Box, IconButton, Paper, CircularProgress } from '@mui/material';
 import { ArrowBack, ArrowForward } from '@mui/icons-material';
 import { getSliderSettings } from '../utils/imageStore';
 
 const ImageSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [settings, setSettings] = useState({
     images: [],
     autoPlay: true,
@@ -16,17 +18,25 @@ const ImageSlider = () => {
   useEffect(() => {
     const loadSettings = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const sliderSettings = await getSliderSettings();
         console.log('Loaded slider settings:', sliderSettings);
-        if (sliderSettings) {
+        
+        if (sliderSettings && sliderSettings.images) {
           console.log('Setting images:', sliderSettings.images);
           setSettings(prev => ({
             ...prev,
             ...sliderSettings
           }));
+        } else {
+          setError('No images found');
         }
       } catch (error) {
         console.error('Error loading slider settings:', error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -59,8 +69,28 @@ const ImageSlider = () => {
     );
   };
 
-  if (!settings.images.length) {
-    return null;
+  if (loading) {
+    return (
+      <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
+        <CircularProgress />
+      </Paper>
+    );
+  }
+
+  if (error) {
+    return (
+      <Paper elevation={3} sx={{ p: 4, textAlign: 'center', color: 'error.main' }}>
+        Error: {error}
+      </Paper>
+    );
+  }
+
+  if (!settings.images || settings.images.length === 0) {
+    return (
+      <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
+        No images available
+      </Paper>
+    );
   }
 
   return (
@@ -96,6 +126,10 @@ const ImageSlider = () => {
               objectFit: 'cover',
               opacity: currentIndex === index ? 1 : 0,
               transition: 'opacity 0.5s ease-in-out'
+            }}
+            onError={(e) => {
+              console.error('Error loading image:', image.path);
+              e.target.src = '/images/placeholder.jpg';
             }}
           />
         ))}
