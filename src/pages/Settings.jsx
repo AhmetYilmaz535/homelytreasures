@@ -328,6 +328,8 @@ const Settings = () => {
       setLoading(true);
       const newSettings = {
         ...settings,
+        autoplay: settings.autoplay ?? defaultSettings.autoplay,
+        autoplaySpeed: settings.autoplaySpeed ?? defaultSettings.autoplaySpeed,
         effects: defaultSettings.effects
       };
       

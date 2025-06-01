@@ -396,22 +396,24 @@ export const updateSliderSettings = async (newSettings) => {
     // Yeni ayarları mevcut ayarlarla birleştir
     const mergedSettings = {
       ...currentSettings,
-      autoplay: newSettings.autoplay ?? currentSettings.autoplay,
-      autoplaySpeed: newSettings.autoplaySpeed ?? currentSettings.autoplaySpeed,
+      autoplay: newSettings.autoplay !== undefined ? newSettings.autoplay : currentSettings.autoplay,
+      autoplaySpeed: newSettings.autoplaySpeed !== undefined ? newSettings.autoplaySpeed : currentSettings.autoplaySpeed,
       effects: {
         ...currentSettings.effects,
-        kenBurns: {
-          ...currentSettings.effects?.kenBurns,
-          ...newSettings.effects?.kenBurns
-        },
-        transition: {
-          ...currentSettings.effects?.transition,
-          ...newSettings.effects?.transition
-        },
-        filmGrain: {
-          ...currentSettings.effects?.filmGrain,
-          ...newSettings.effects?.filmGrain
-        }
+        ...(newSettings.effects && {
+          kenBurns: {
+            ...currentSettings.effects?.kenBurns,
+            ...newSettings.effects?.kenBurns
+          },
+          transition: {
+            ...currentSettings.effects?.transition,
+            ...newSettings.effects?.transition
+          },
+          filmGrain: {
+            ...currentSettings.effects?.filmGrain,
+            ...newSettings.effects?.filmGrain
+          }
+        })
       },
       texts: {
         ...currentSettings.texts,
@@ -467,5 +469,33 @@ export const updateImageOrder = async (images) => {
   } catch (error) {
     console.error('Error updating image order:', error);
     throw error;
+  }
+};
+
+const handleResetEffects = async () => {
+  try {
+    setLoading(true);
+    const newSettings = {
+      ...settings,
+      autoplay: settings.autoplay ?? defaultSettings.autoplay,
+      autoplaySpeed: settings.autoplaySpeed ?? defaultSettings.autoplaySpeed,
+      effects: defaultSettings.effects
+    };
+    
+    // Firebase'e kaydet
+    const result = await updateSliderSettings(newSettings);
+    
+    if (result) {
+      setSettings(newSettings);
+      setUnsavedChanges(false);
+      showMessage('Efekt ayarları varsayılan değerlere döndürüldü ve kaydedildi.');
+    } else {
+      throw new Error('Ayarlar kaydedilemedi.');
+    }
+  } catch (error) {
+    console.error('Error resetting effects:', error);
+    showMessage('Efekt ayarları sıfırlanırken bir hata oluştu: ' + error.message, 'error');
+  } finally {
+    setLoading(false);
   }
 }; 
