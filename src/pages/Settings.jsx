@@ -43,7 +43,7 @@ import {
 } from '../utils/imageStore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import imageCompression from 'browser-image-compression';
-import { storage } from '../firebase';
+import { storage } from '../firebase/index';
 
 const SettingsSection = ({ title, children }) => (
   <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
