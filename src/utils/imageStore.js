@@ -384,6 +384,21 @@ export const getSliderSettings = async () => {
   }
 };
 
+// Undefined değerleri temizleyen yardımcı fonksiyon
+const cleanUndefined = (obj) => {
+  const cleaned = {};
+  Object.entries(obj).forEach(([key, value]) => {
+    if (value !== undefined) {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        cleaned[key] = cleanUndefined(value);
+      } else {
+        cleaned[key] = value;
+      }
+    }
+  });
+  return cleaned;
+};
+
 // Slider ayarlarını güncelle
 export const updateSliderSettings = async (newSettings) => {
   try {
@@ -396,34 +411,18 @@ export const updateSliderSettings = async (newSettings) => {
     // Yeni ayarları mevcut ayarlarla birleştir
     const mergedSettings = {
       ...currentSettings,
-      autoplay: newSettings.autoplay !== undefined ? newSettings.autoplay : currentSettings.autoplay,
-      autoplaySpeed: newSettings.autoplaySpeed !== undefined ? newSettings.autoplaySpeed : currentSettings.autoplaySpeed,
-      effects: {
-        ...currentSettings.effects,
-        ...(newSettings.effects && {
-          kenBurns: {
-            ...currentSettings.effects?.kenBurns,
-            ...newSettings.effects?.kenBurns
-          },
-          transition: {
-            ...currentSettings.effects?.transition,
-            ...newSettings.effects?.transition
-          },
-          filmGrain: {
-            ...currentSettings.effects?.filmGrain,
-            ...newSettings.effects?.filmGrain
-          }
-        })
-      },
-      texts: {
-        ...currentSettings.texts,
-        ...newSettings.texts
-      },
-      footer: {
-        ...currentSettings.footer,
-        ...newSettings.footer
-      },
-      updatedAt: new Date().toISOString()
+      ...cleanUndefined({
+        autoplay: newSettings.autoplay,
+        autoplaySpeed: newSettings.autoplaySpeed,
+        effects: newSettings.effects ? {
+          kenBurns: newSettings.effects.kenBurns,
+          transition: newSettings.effects.transition,
+          filmGrain: newSettings.effects.filmGrain
+        } : undefined,
+        texts: newSettings.texts,
+        footer: newSettings.footer,
+        updatedAt: new Date().toISOString()
+      })
     };
     
     console.log('Merged settings:', mergedSettings);
