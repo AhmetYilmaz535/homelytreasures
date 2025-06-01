@@ -35,10 +35,14 @@ const Footer = () => {
   });
 
   useEffect(() => {
-    const loadSettings = () => {
-      const settings = getSliderSettings();
-      if (settings?.footer) {
-        setFooterSettings(settings.footer);
+    const loadSettings = async () => {
+      try {
+        const settings = await getSliderSettings();
+        if (settings?.footer) {
+          setFooterSettings(settings.footer);
+        }
+      } catch (error) {
+        console.error('Error loading footer settings:', error);
       }
     };
 
