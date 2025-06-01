@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography } from '@mui/material';
+import { Box, Container, Typography, Grid, Paper } from '@mui/material';
 import ImageSlider from '../components/ImageSlider';
 import { getSliderSettings } from '../utils/imageStore';
 
 const Home = () => {
   const [settings, setSettings] = useState({
     texts: {
-      title: {
+      heading: {
         text: "Welcome to Our Store",
-        color: "#333",
+        color: "#000000",
         fontSize: 32,
-        fontWeight: 700
+        fontWeight: 600
       },
-      subtitle: {
-        text: "Discover our amazing products",
-        color: "#666",
-        fontSize: 18,
-        fontWeight: 400
+      about: {
+        title: "About Us",
+        text: "Welcome to The Homely Treasures, your premier destination for unique and carefully curated home products.",
+        titleColor: "#000000",
+        textColor: "#666666",
+        titleSize: 28
       }
     }
   });
@@ -25,14 +26,8 @@ const Home = () => {
     const loadSettings = async () => {
       try {
         const sliderSettings = await getSliderSettings();
-        if (sliderSettings?.texts) {
-          setSettings(prev => ({
-            ...prev,
-            texts: {
-              ...prev.texts,
-              ...sliderSettings.texts
-            }
-          }));
+        if (sliderSettings) {
+          setSettings(sliderSettings);
         }
       } catch (error) {
         console.error('Error loading settings:', error);
@@ -46,33 +41,67 @@ const Home = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ my: 4, textAlign: 'center' }}>
+      {/* Hero Section with Slider */}
+      <Box sx={{ my: 4 }}>
         <Typography
           variant="h1"
           component="h1"
           sx={{
-            fontSize: `${settings.texts.title.fontSize}px`,
-            fontWeight: settings.texts.title.fontWeight,
-            color: settings.texts.title.color,
-            mb: 2
+            fontSize: settings.texts.heading.fontSize,
+            fontWeight: settings.texts.heading.fontWeight,
+            color: settings.texts.heading.color,
+            mb: 2,
+            textAlign: 'center'
           }}
         >
-          {settings.texts.title.text}
+          {settings.texts.heading.text}
         </Typography>
+        <ImageSlider />
+      </Box>
+
+      {/* About Section */}
+      <Paper elevation={0} sx={{ p: 4, mb: 4, borderRadius: 2, backgroundColor: 'background.paper' }}>
         <Typography
           variant="h2"
           component="h2"
           sx={{
-            fontSize: `${settings.texts.subtitle.fontSize}px`,
-            fontWeight: settings.texts.subtitle.fontWeight,
-            color: settings.texts.subtitle.color,
-            mb: 4
+            fontSize: settings.texts.about.titleSize,
+            color: settings.texts.about.titleColor,
+            mb: 2
           }}
         >
-          {settings.texts.subtitle.text}
+          {settings.texts.about.title}
         </Typography>
+        <Typography
+          variant="body1"
+          sx={{
+            color: settings.texts.about.textColor,
+            fontSize: 16,
+            lineHeight: 1.6
+          }}
+        >
+          {settings.texts.about.text}
+        </Typography>
+      </Paper>
+
+      {/* Products Preview Section */}
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant="h2"
+          component="h2"
+          sx={{
+            fontSize: 28,
+            color: 'text.primary',
+            mb: 3,
+            textAlign: 'center'
+          }}
+        >
+          Featured Products
+        </Typography>
+        <Grid container spacing={3}>
+          {/* Product cards will be dynamically loaded here */}
+        </Grid>
       </Box>
-      <ImageSlider />
     </Container>
   );
 };

@@ -21,10 +21,10 @@ import imageCompression from 'browser-image-compression';
 
 // Varsayılan resimler
 const defaultImages = [
-  { id: 1, path: '/images/ana1.jpg', order: 1 },
-  { id: 2, path: '/images/ana2.jpg', order: 2 },
-  { id: 3, path: '/images/ana3.jpg', order: 3 },
-  { id: 4, path: '/images/ana4.jpg', order: 4 }
+  { id: 'default_1', path: 'https://firebasestorage.googleapis.com/v0/b/homelytreasures-2024.appspot.com/o/images%2Fdefault_1.jpg?alt=media', order: 1 },
+  { id: 'default_2', path: 'https://firebasestorage.googleapis.com/v0/b/homelytreasures-2024.appspot.com/o/images%2Fdefault_2.jpg?alt=media', order: 2 },
+  { id: 'default_3', path: 'https://firebasestorage.googleapis.com/v0/b/homelytreasures-2024.appspot.com/o/images%2Fdefault_3.jpg?alt=media', order: 3 },
+  { id: 'default_4', path: 'https://firebasestorage.googleapis.com/v0/b/homelytreasures-2024.appspot.com/o/images%2Fdefault_4.jpg?alt=media', order: 4 }
 ];
 
 // Maksimum yüklenebilecek resim sayısı
