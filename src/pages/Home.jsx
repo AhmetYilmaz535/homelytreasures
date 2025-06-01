@@ -4,6 +4,7 @@ import ImageSlider from '../components/ImageSlider';
 import { getSliderSettings } from '../utils/imageStore';
 import { getProducts } from '../firebase/services';
 import { getAllAvailableImages } from '../utils/imageStore';
+import parse from 'html-react-parser';
 
 const Home = () => {
   const [settings, setSettings] = useState(null);
@@ -51,17 +52,17 @@ const Home = () => {
       </Box>
 
       <Box sx={{ mb: 6 }}>
-        <Typography 
-          variant="body1"
-          sx={{ 
+        <div 
+          style={{ 
             color: texts.about.textColor,
             textAlign: 'center',
             maxWidth: '800px',
-            mx: 'auto',
+            margin: '0 auto',
             lineHeight: 1.8
           }}
-          dangerouslySetInnerHTML={{ __html: texts.about.text || '' }}
-        />
+        >
+          {parse(texts.about.text || '')}
+        </div>
       </Box>
 
       <Box sx={{ mb: 6 }}>
