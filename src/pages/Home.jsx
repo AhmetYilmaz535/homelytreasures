@@ -3,21 +3,25 @@ import { Box, Typography, Container, CircularProgress, Grid, Card, CardMedia, Ca
 import ImageSlider from '../components/ImageSlider';
 import { getSliderSettings } from '../utils/imageStore';
 import { getProducts } from '../firebase/services';
+import { getAllAvailableImages } from '../utils/imageStore';
 
 const Home = () => {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
+  const [mainImages, setMainImages] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [sliderSettings, productList] = await Promise.all([
+        const [sliderSettings, productList, mainImagesList] = await Promise.all([
           getSliderSettings(),
-          getProducts()
+          getProducts(),
+          getAllAvailableImages()
         ]);
         setSettings(sliderSettings);
         setProducts(productList);
+        setMainImages(mainImagesList);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -70,7 +74,7 @@ const Home = () => {
       </Box>
 
       <Box sx={{ mb: 6 }}>
-        <ImageSlider />
+        <ImageSlider images={mainImages} settings={settings} height={400} autoPlay={true} />
       </Box>
 
       <Box sx={{ mb: 6 }}>

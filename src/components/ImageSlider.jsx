@@ -1,49 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Paper, Box, IconButton } from '@mui/material';
 import { ArrowBack, ArrowForward } from '@mui/icons-material';
-import { getAllAvailableImages, getSliderSettings } from '../utils/imageStore';
 
-const ImageSlider = () => {
-  const [images, setImages] = useState([]);
+const ImageSlider = ({ images = [], settings = null, height = 400, autoPlay = true }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [settings, setSettings] = useState(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
-
-  useEffect(() => {
-    const loadImagesAndSettings = async () => {
-      try {
-        const [firebaseImages, sliderSettings] = await Promise.all([
-          getAllAvailableImages(),
-          getSliderSettings()
-        ]);
-        console.log('Firebase images:', firebaseImages);
-        console.log('Slider settings:', sliderSettings);
-        setImages(firebaseImages);
-        setSettings(sliderSettings);
-      } catch (error) {
-        console.error('Error loading data:', error);
-      }
-    };
-
-    loadImagesAndSettings();
-  }, []);
 
   const handleTransition = useCallback((newIndex) => {
     setIsTransitioning(true);
     setCurrentIndex(newIndex);
-    // CSS transition süresi kadar bekle
     setTimeout(() => setIsTransitioning(false), settings?.effects?.transition?.duration || 800);
   }, [settings?.effects?.transition?.duration]);
 
   useEffect(() => {
     let interval;
-    if (settings?.autoplay && images.length > 1) {
+    if (autoPlay && settings?.autoplay && images.length > 1) {
       interval = setInterval(() => {
         handleTransition((currentIndex + 1) % images.length);
-      }, settings.autoplaySpeed || 6000);
+      }, settings?.autoplaySpeed || 6000);
     }
     return () => clearInterval(interval);
-  }, [currentIndex, settings, images.length, handleTransition]);
+  }, [currentIndex, settings, images.length, handleTransition, autoPlay]);
 
   const handlePrevClick = () => {
     const newIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
@@ -59,7 +36,6 @@ const ImageSlider = () => {
 
   const { effects } = settings;
 
-  // CSS değişkenlerini ayarla
   const cssVariables = {
     '--ken-burns-duration': `${effects?.kenBurns?.duration || 15000}ms`,
     '--grain-opacity': effects?.filmGrain?.opacity || 0.03,
@@ -74,13 +50,13 @@ const ImageSlider = () => {
           position: 'relative',
           overflow: 'hidden',
           borderRadius: 2,
-          height: 400,
+          height: height,
           width: '100%'
         }}
       >
         <Box
           component="img"
-          src={images[currentIndex].path}
+          src={typeof images[currentIndex] === 'string' ? images[currentIndex] : images[currentIndex].path}
           alt={`Slide ${currentIndex + 1}`}
           className={`
             slider-image
@@ -99,7 +75,6 @@ const ImageSlider = () => {
           }}
         />
 
-        {/* Karartma katmanı */}
         {effects?.transition?.darkOverlay > 0 && (
           <Box
             sx={{
@@ -116,41 +91,45 @@ const ImageSlider = () => {
           />
         )}
 
-        <IconButton
-          onClick={handlePrevClick}
-          sx={{
-            position: 'absolute',
-            left: 16,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 2,
-            color: 'white',
-            backgroundColor: 'rgba(0,0,0,0.4)',
-            '&:hover': {
-              backgroundColor: 'rgba(0,0,0,0.6)'
-            }
-          }}
-        >
-          <ArrowBack />
-        </IconButton>
+        {images.length > 1 && (
+          <>
+            <IconButton
+              onClick={handlePrevClick}
+              sx={{
+                position: 'absolute',
+                left: 16,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 2,
+                color: 'white',
+                backgroundColor: 'rgba(0,0,0,0.4)',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.6)'
+                }
+              }}
+            >
+              <ArrowBack />
+            </IconButton>
 
-        <IconButton
-          onClick={handleNextClick}
-          sx={{
-            position: 'absolute',
-            right: 16,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 2,
-            color: 'white',
-            backgroundColor: 'rgba(0,0,0,0.4)',
-            '&:hover': {
-              backgroundColor: 'rgba(0,0,0,0.6)'
-            }
-          }}
-        >
-          <ArrowForward />
-        </IconButton>
+            <IconButton
+              onClick={handleNextClick}
+              sx={{
+                position: 'absolute',
+                right: 16,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 2,
+                color: 'white',
+                backgroundColor: 'rgba(0,0,0,0.4)',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.6)'
+                }
+              }}
+            >
+              <ArrowForward />
+            </IconButton>
+          </>
+        )}
       </Paper>
     </Box>
   );
