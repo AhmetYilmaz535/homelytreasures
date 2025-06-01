@@ -6,6 +6,13 @@ import { getProducts } from '../firebase/services';
 import { getAllAvailableImages } from '../utils/imageStore';
 import parse from 'html-react-parser';
 
+// HTML entities decode function
+const decodeHTMLEntities = (text) => {
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+};
+
 const Home = () => {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,7 +60,9 @@ const Home = () => {
 
       <Box sx={{ mb: 6 }}>
         <div
-          dangerouslySetInnerHTML={{ __html: texts.about.text }}
+          dangerouslySetInnerHTML={{ 
+            __html: texts.about.text ? decodeHTMLEntities(texts.about.text) : '' 
+          }}
           style={{ 
             color: texts.about.textColor,
             textAlign: 'center',
