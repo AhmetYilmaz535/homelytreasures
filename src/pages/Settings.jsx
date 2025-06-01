@@ -484,7 +484,7 @@ const Settings = () => {
           control={
             <Switch
               checked={settings.effects.kenBurns.enabled}
-              onChange={(e) => handleSettingChange('kenBurns', null, 'enabled', e.target.checked)}
+              onChange={(e) => handleSettingChange('effects', 'kenBurns', 'enabled', e.target.checked)}
             />
           }
           label="Ken Burns Efektini Etkinleştir"
@@ -492,13 +492,14 @@ const Settings = () => {
         <Box sx={{ mt: 2 }}>
           <Typography gutterBottom>Efekt Süresi (saniye)</Typography>
           <MuiSlider
-            value={settings.effects.kenBurns.duration}
-            onChange={(e, value) => handleSettingChange('kenBurns', null, 'duration', value)}
+            value={settings.effects.kenBurns.duration / 1000}
+            onChange={(e, value) => handleSettingChange('effects', 'kenBurns', 'duration', value * 1000)}
             min={5}
             max={30}
             step={1}
             marks
             valueLabelDisplay="auto"
+            valueLabelFormat={(value) => `${value}s`}
           />
         </Box>
         <Box sx={{ mt: 2 }}>
@@ -515,14 +516,14 @@ const Settings = () => {
                 max: value[1] / 100
               };
               setSettings(newSettings);
-              updateSliderSettings(newSettings);
-              showMessage('Ayarlar güncellendi!');
+              setUnsavedChanges(true);
             }}
             min={100}
             max={150}
             step={1}
             marks
             valueLabelDisplay="auto"
+            valueLabelFormat={(value) => `${value}%`}
           />
         </Box>
       </SettingsSection>
