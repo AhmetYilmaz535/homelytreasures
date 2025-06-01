@@ -325,16 +325,27 @@ const Settings = () => {
 
   const handleResetEffects = async () => {
     try {
+      setLoading(true);
       const newSettings = {
         ...settings,
         effects: defaultSettings.effects
       };
-      setSettings(newSettings);
-      setUnsavedChanges(true);
-      showMessage('Efekt ayarları varsayılan değerlere döndürüldü. Kaydetmek için "Değişiklikleri Kaydet" butonuna tıklayın.');
+      
+      // Firebase'e kaydet
+      const result = await updateSliderSettings(newSettings);
+      
+      if (result) {
+        setSettings(newSettings);
+        setUnsavedChanges(false);
+        showMessage('Efekt ayarları varsayılan değerlere döndürüldü ve kaydedildi.');
+      } else {
+        throw new Error('Ayarlar kaydedilemedi.');
+      }
     } catch (error) {
       console.error('Error resetting effects:', error);
       showMessage('Efekt ayarları sıfırlanırken bir hata oluştu: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
