@@ -114,42 +114,84 @@ const Home = () => {
         >
           Our Products
         </Typography>
-        <Grid container spacing={3}>
+        <Grid container spacing={4}>
           {products.filter(product => product.isActive).map((product) => (
             <Grid item xs={12} sm={6} md={4} key={product.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Card 
+                sx={{ 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                  },
+                  borderRadius: 2,
+                  overflow: 'hidden'
+                }}
+              >
                 {product.images && product.images.length > 0 && (
                   <CardMedia
                     component="img"
-                    height="200"
+                    height="280"
                     image={product.images[0]}
                     alt={product.name}
-                    sx={{ objectFit: 'cover' }}
+                    sx={{ 
+                      objectFit: 'cover',
+                      transition: 'transform 0.3s',
+                      '&:hover': {
+                        transform: 'scale(1.05)'
+                      }
+                    }}
                   />
                 )}
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography gutterBottom variant="h5" component="h2">
+                <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                  <Typography 
+                    gutterBottom 
+                    variant="h5" 
+                    component="h2"
+                    sx={{
+                      fontWeight: 600,
+                      color: '#2C3E50',
+                      mb: 2
+                    }}
+                  >
                     {product.name}
                   </Typography>
-                  <Typography>
+                  <Typography
+                    sx={{
+                      color: '#666',
+                      mb: 3,
+                      lineHeight: 1.6
+                    }}
+                  >
                     {product.description}
                   </Typography>
-                </CardContent>
-                {product.amazonLink && (
-                  <Box sx={{ p: 2, pt: 0 }}>
+                  {product.amazonLink && (
                     <Button
                       component={Link}
                       href={product.amazonLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       variant="contained"
-                      color="primary"
                       fullWidth
+                      sx={{
+                        mt: 'auto',
+                        py: 1.5,
+                        backgroundColor: '#FF9900',
+                        color: '#fff',
+                        fontWeight: 600,
+                        '&:hover': {
+                          backgroundColor: '#FF8C00'
+                        },
+                        borderRadius: 1.5
+                      }}
                     >
                       View on Amazon
                     </Button>
-                  </Box>
-                )}
+                  )}
+                </CardContent>
               </Card>
             </Grid>
           ))}
