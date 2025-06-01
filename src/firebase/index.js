@@ -35,7 +35,6 @@ const initializeFirebase = () => {
     // Firestore'u özel ayarlarla başlat
     db = initializeFirestore(app, {
       cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-      experimentalForceLongPolling: true,
       experimentalAutoDetectLongPolling: true
     });
 
