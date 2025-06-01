@@ -156,20 +156,30 @@ export const getSelectedImages = async () => {
 // Seçili resimleri kaydet
 export const saveSelectedImages = async (images) => {
   try {
-    // Önce mevcut seçili resimleri temizle
-    const snapshot = await getDocs(collection(db, 'selectedImages'));
-    const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
-    await Promise.all(deletePromises);
-
-    // Yeni seçili resimleri kaydet
-    const savePromises = images.map(image => 
-      setDoc(doc(db, 'selectedImages', image.id), image)
-    );
-    await Promise.all(savePromises);
-
+    const batch = writeBatch(db);
+    
+    // Önce tüm seçili resimleri temizle
+    const selectedImagesRef = collection(db, 'selectedImages');
+    const selectedImagesSnapshot = await getDocs(selectedImagesRef);
+    selectedImagesSnapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    
+    // Yeni seçili resimleri ekle
+    images.forEach(image => {
+      const imageRef = doc(db, 'selectedImages', image.id);
+      batch.set(imageRef, {
+        id: image.id,
+        path: image.path,
+        order: image.order || 1
+      });
+    });
+    
+    await batch.commit();
     window.dispatchEvent(new Event('settingsChanged'));
+    return true;
   } catch (error) {
-    console.error('Error saving images:', error);
+    console.error('Error saving selected images:', error);
     throw error;
   }
 };
@@ -198,46 +208,25 @@ export const deleteImage = async (imageId) => {
 // Yeni resim ekle
 export const addCustomImage = async (file) => {
   try {
+    // Mevcut resimleri kontrol et
     const currentImages = await getAllAvailableImages();
-    
-    // Maksimum resim sayısı kontrolü
     if (currentImages.length >= MAX_IMAGES) {
-      throw new Error(`Maksimum ${MAX_IMAGES} resim yükleyebilirsiniz!`);
+      throw new Error('Maksimum resim sayısına ulaşıldı!');
     }
 
-    // Resim dosyası kontrolü
-    if (!file || !file.type.startsWith('image/')) {
-      throw new Error('Geçersiz resim dosyası!');
-    }
+    // Resmi sıkıştır
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true
+    };
+    const compressedFile = await imageCompression(file, options);
 
-    // Dosya boyutu kontrolü (5MB)
-    const MAX_FILE_SIZE = 5 * 1024 * 1024;
-    if (file.size > MAX_FILE_SIZE) {
-      throw new Error('Resim boyutu 5MB\'dan büyük olamaz!');
-    }
+    // Benzersiz ID oluştur
+    const imageId = `img_${Date.now()}`;
 
-    const imageId = Date.now().toString();
-    
-    // Storage'a resmi yükle
+    // Storage referansı oluştur
     const storageRef = ref(storage, `images/${imageId}`);
-    
-    // Resim sıkıştırma işlemi
-    let compressedFile = file;
-    if (file.size > 1024 * 1024) { // 1MB'dan büyükse sıkıştır
-      const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true
-      };
-      try {
-        compressedFile = await imageCompression(file, options);
-      } catch (error) {
-        console.error('Error compressing image:', error);
-        compressedFile = file; // Sıkıştırma başarısız olursa orijinal dosyayı kullan
-      }
-    }
-
-    // Upload işlemi
     const uploadTask = uploadBytesResumable(storageRef, compressedFile);
 
     // Upload progress
@@ -262,7 +251,6 @@ export const addCustomImage = async (file) => {
             const newImage = {
               id: imageId,
               path: imageUrl,
-              url: imageUrl,
               order: currentImages.length + 1,
               createdAt: new Date().toISOString(),
               fileName: file.name,
@@ -271,8 +259,12 @@ export const addCustomImage = async (file) => {
               dimensions: await getImageDimensions(file)
             };
 
-            // Sadece images koleksiyonuna ekle
+            // Resmi images koleksiyonuna ekle
             await setDoc(doc(db, 'images', imageId), newImage);
+
+            // Resmi otomatik olarak seçili resimlere ekle
+            const selectedImages = await getSelectedImages();
+            await saveSelectedImages([...selectedImages, newImage]);
 
             window.dispatchEvent(new Event('settingsChanged'));
             resolve(newImage);
@@ -334,10 +326,17 @@ export const getSliderSettings = async () => {
 
     // Seçili resimleri al
     const selectedImages = await getSelectedImages();
+    const availableImages = await getAllAvailableImages();
+    
+    // Seçili resimlerin tam bilgilerini al
+    const selectedImagesWithDetails = selectedImages.map(selectedImage => {
+      const fullImage = availableImages.find(img => img.id === selectedImage.id);
+      return fullImage || selectedImage;
+    });
     
     return {
       ...settingsDoc.data(),
-      images: selectedImages
+      images: selectedImagesWithDetails
     };
   } catch (error) {
     console.error('Error getting slider settings:', error);

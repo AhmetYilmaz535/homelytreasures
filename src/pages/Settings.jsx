@@ -65,6 +65,7 @@ const Settings = () => {
     open: false,
     image: null
   });
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
 
   const showMessage = (message, severity = 'success') => {
     setSnackbar({
@@ -270,11 +271,7 @@ const Settings = () => {
       
       console.log('New settings:', newSettings);
       setSettings(newSettings);
-      
-      const result = await updateSliderSettings(newSettings);
-      console.log('Update result:', result);
-      
-      showMessage('Ayarlar güncellendi!');
+      setUnsavedChanges(true);
     } catch (error) {
       console.error('Error updating settings:', error);
       console.error('Error details:', {
@@ -283,6 +280,24 @@ const Settings = () => {
         stack: error.stack
       });
       showMessage('Ayarlar güncellenirken bir hata oluştu: ' + error.message, 'error');
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      setLoading(true);
+      const result = await updateSliderSettings(settings);
+      if (result) {
+        setUnsavedChanges(false);
+        showMessage('Ayarlar başarıyla kaydedildi!');
+      } else {
+        throw new Error('Ayarlar kaydedilemedi.');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      showMessage('Ayarlar kaydedilirken bir hata oluştu: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -310,6 +325,27 @@ const Settings = () => {
 
   return (
     <Box>
+      <Box sx={{ 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 1100,
+        backgroundColor: 'white',
+        borderBottom: '1px solid #e0e0e0',
+        padding: '1rem',
+        display: 'flex',
+        justifyContent: 'flex-end',
+        gap: 2
+      }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSaveSettings}
+          disabled={!unsavedChanges || loading}
+        >
+          {loading ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+        </Button>
+      </Box>
+
       <SettingsSection title="Slider Resimleri">
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
