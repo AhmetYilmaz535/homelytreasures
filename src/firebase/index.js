@@ -1,5 +1,10 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { 
+  getFirestore, 
+  enableMultiTabIndexedDbPersistence,
+  initializeFirestore,
+  CACHE_SIZE_UNLIMITED
+} from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 import { getAnalytics } from 'firebase/analytics';
@@ -27,8 +32,23 @@ const initializeFirebase = () => {
     // Firebase'i başlat
     app = initializeApp(firebaseConfig);
     
-    // Firestore veritabanını başlat
-    db = getFirestore(app);
+    // Firestore'u özel ayarlarla başlat
+    db = initializeFirestore(app, {
+      cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+      experimentalForceLongPolling: true,
+      experimentalAutoDetectLongPolling: true
+    });
+
+    // Multi-tab persistence'ı etkinleştir
+    if (typeof window !== 'undefined') {
+      enableMultiTabIndexedDbPersistence(db).catch((err) => {
+        if (err.code === 'failed-precondition') {
+          console.warn('Multiple tabs open, persistence enabled in another tab.');
+        } else if (err.code === 'unimplemented') {
+          console.warn('The current browser doesn\'t support all of the features required to enable persistence');
+        }
+      });
+    }
     
     // Storage'ı başlat
     storage = getStorage(app);
@@ -39,17 +59,6 @@ const initializeFirebase = () => {
     // Analytics'i başlat (sadece browser ortamında)
     if (typeof window !== 'undefined') {
       analytics = getAnalytics(app);
-    }
-
-    // Offline persistence'ı etkinleştir
-    if (typeof window !== 'undefined') {
-      enableIndexedDbPersistence(db).catch((err) => {
-        if (err.code === 'failed-precondition') {
-          console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-        } else if (err.code === 'unimplemented') {
-          console.warn('The current browser doesn\'t support all of the features required to enable persistence');
-        }
-      });
     }
 
     console.log('Firebase initialized successfully');
