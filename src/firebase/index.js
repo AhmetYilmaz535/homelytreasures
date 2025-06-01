@@ -1,7 +1,8 @@
 import { initializeApp } from 'firebase/app';
 import { 
-  getFirestore, 
-  enableMultiTabIndexedDbPersistence
+  getFirestore,
+  initializeFirestore,
+  CACHE_SIZE_UNLIMITED
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
@@ -25,53 +26,29 @@ let storage;
 let auth;
 let analytics;
 
-const initializeFirebase = () => {
-  try {
-    // Firebase'i başlat
-    app = initializeApp(firebaseConfig);
-    
-    // Firestore'u başlat
-    db = getFirestore(app);
-
-    // Multi-tab persistence'ı etkinleştir
-    if (typeof window !== 'undefined') {
-      enableMultiTabIndexedDbPersistence(db).catch((err) => {
-        if (err.code === 'failed-precondition') {
-          console.warn('Multiple tabs open, persistence enabled in another tab.');
-        } else if (err.code === 'unimplemented') {
-          console.warn('The current browser doesn\'t support all of the features required to enable persistence');
-        }
-      });
+try {
+  app = initializeApp(firebaseConfig);
+  console.log('Firebase initialized successfully');
+  
+  // Firestore'u cache ayarlarıyla başlat
+  db = initializeFirestore(app, {
+    cache: {
+      sizeBytes: CACHE_SIZE_UNLIMITED
     }
-    
-    // Storage'ı başlat
-    storage = getStorage(app);
-    
-    // Authentication'ı başlat
-    auth = getAuth(app);
-
-    // Analytics'i başlat (sadece browser ortamında)
-    if (typeof window !== 'undefined') {
-      analytics = getAnalytics(app);
-    }
-
-    console.log('Firebase initialized successfully');
-    return true;
-  } catch (error) {
-    console.error('Error initializing Firebase:', error);
-    return false;
-  }
-};
+  });
+  console.log('Database initialized successfully');
+  
+  storage = getStorage(app);
+  auth = getAuth(app);
+  analytics = getAnalytics(app);
+} catch (error) {
+  console.error('Error initializing Firebase:', error);
+  throw error;
+}
 
 // Veritabanını başlat
 const initializeDatabase = async () => {
   try {
-    // Firebase'i başlat
-    const isInitialized = initializeFirebase();
-    if (!isInitialized) {
-      throw new Error('Firebase initialization failed');
-    }
-
     // Settings collection'ı kontrol et
     const settingsDoc = await getDoc(doc(db, 'settings', 'sliderSettings'));
     if (!settingsDoc.exists()) {
