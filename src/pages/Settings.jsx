@@ -215,20 +215,57 @@ const Settings = () => {
     try {
       console.log('Updating settings:', { section, subsection, key, value });
       const newSettings = { ...settings };
+
+      // Font boyutu değerlerini sayıya çevir
+      if (key === 'fontSize') {
+        value = parseInt(value);
+      }
       
-      if (subsection) {
-        if (!newSettings[section]) {
-          newSettings[section] = {};
+      // Nested yapıyı doğru şekilde güncelle
+      if (section === 'effects') {
+        if (!newSettings.effects) {
+          newSettings.effects = {};
         }
-        if (!newSettings[section][subsection]) {
-          newSettings[section][subsection] = {};
+        if (subsection) {
+          if (!newSettings.effects[subsection]) {
+            newSettings.effects[subsection] = {};
+          }
+          newSettings.effects[subsection][key] = value;
+        } else {
+          newSettings.effects[key] = value;
         }
-        newSettings[section][subsection][key] = value;
-      } else {
-        if (!newSettings[section]) {
-          newSettings[section] = {};
+      } else if (section === 'texts') {
+        if (!newSettings.texts) {
+          newSettings.texts = {};
         }
-        newSettings[section][key] = value;
+        if (subsection) {
+          if (!newSettings.texts[subsection]) {
+            newSettings.texts[subsection] = {};
+          }
+          newSettings.texts[subsection][key] = value;
+        } else {
+          newSettings.texts[key] = value;
+        }
+      } else if (section === 'footer') {
+        if (!newSettings.footer) {
+          newSettings.footer = {};
+        }
+        if (subsection) {
+          if (!newSettings.footer[subsection]) {
+            newSettings.footer[subsection] = {};
+          }
+          if (subsection === 'socialMedia' && key.includes('.')) {
+            const [platform, field] = key.split('.');
+            if (!newSettings.footer.socialMedia[platform]) {
+              newSettings.footer.socialMedia[platform] = {};
+            }
+            newSettings.footer.socialMedia[platform][field] = value;
+          } else {
+            newSettings.footer[subsection][key] = value;
+          }
+        } else {
+          newSettings.footer[key] = value;
+        }
       }
       
       console.log('New settings:', newSettings);

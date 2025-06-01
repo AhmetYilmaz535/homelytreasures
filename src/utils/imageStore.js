@@ -36,11 +36,11 @@ const defaultSettings = {
   effects: {
     kenBurns: {
       enabled: true,
-      duration: 20,
+      duration: 20000,
       zoomRange: { min: 1.0, max: 1.2 }
     },
     transition: {
-      duration: 1.5,
+      duration: 1500,
       blurAmount: 10,
       darkOverlay: 0.2
     },
@@ -68,6 +68,13 @@ const defaultSettings = {
       color: "#A67C52",
       fontSize: 20,
       fontWeight: 700
+    },
+    about: {
+      title: "About Us",
+      text: "Welcome to The Homely Treasures, your premier destination for unique and carefully curated home products.",
+      titleColor: "#000000",
+      textColor: "#666666",
+      titleSize: 28
     }
   },
   footer: {
