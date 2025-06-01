@@ -71,13 +71,13 @@ const defaultSettings = {
     header: {
       text: 'The Homely Treasures',
       color: '#000000',
-      fontSize: '24px',
+      fontSize: 24,
       fontWeight: 600
     },
     heading: {
       text: 'Welcome to Our Store',
       color: '#000000',
-      fontSize: '32px',
+      fontSize: 32,
       fontWeight: 600
     },
     about: {
@@ -85,7 +85,7 @@ const defaultSettings = {
       text: 'Welcome to The Homely Treasures, your premier destination for unique and carefully curated home products.',
       titleColor: '#000000',
       textColor: '#666666',
-      titleSize: '28px'
+      titleSize: 28
     }
   },
   effects: {
@@ -109,13 +109,13 @@ const defaultSettings = {
     leftText: {
       text: '© 2024 The Homely Treasures',
       color: '#666666',
-      fontSize: '14px',
+      fontSize: 14,
       fontWeight: 400
     },
     rightText: {
       text: 'All rights reserved',
       color: '#666666',
-      fontSize: '14px',
+      fontSize: 14,
       fontWeight: 400
     },
     socialMedia: {
