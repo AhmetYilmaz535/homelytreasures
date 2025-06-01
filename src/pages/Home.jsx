@@ -154,20 +154,24 @@ const Home = () => {
                     sx={{
                       fontWeight: 600,
                       color: '#2C3E50',
-                      mb: 2
+                      mb: 2,
+                      textAlign: 'center'
                     }}
                   >
                     {product.name}
                   </Typography>
-                  <Typography
-                    sx={{
-                      color: '#666',
-                      mb: 3,
-                      lineHeight: 1.6
-                    }}
-                  >
-                    {product.description}
-                  </Typography>
+                  {product.description && (
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{
+                        mb: 2,
+                        textAlign: 'center'
+                      }}
+                    >
+                      {product.description}
+                    </Typography>
+                  )}
                   {product.amazonLink && (
                     <Button
                       component={Link}
