@@ -557,38 +557,53 @@ const Settings = () => {
 
       <SettingsSection title="Geçiş Efektleri">
         <Box sx={{ mt: 2 }}>
-          <Typography gutterBottom>Geçiş Süresi (saniye)</Typography>
+          <Typography gutterBottom>Geçiş Süresi (milisaniye)</Typography>
           <MuiSlider
             value={settings.effects.transition.duration}
-            onChange={(e, value) => handleSettingChange('transition', null, 'duration', value)}
-            min={0.5}
-            max={3}
-            step={0.1}
-            marks
+            onChange={(e, value) => handleSettingChange('effects', 'transition', 'duration', value)}
+            min={100}
+            max={2000}
+            step={100}
+            marks={[
+              { value: 100, label: '100ms' },
+              { value: 500, label: '500ms' },
+              { value: 1000, label: '1s' },
+              { value: 2000, label: '2s' }
+            ]}
             valueLabelDisplay="auto"
+            valueLabelFormat={(value) => `${value}ms`}
           />
         </Box>
         <Box sx={{ mt: 2 }}>
           <Typography gutterBottom>Bulanıklık Miktarı (px)</Typography>
           <MuiSlider
             value={settings.effects.transition.blurAmount}
-            onChange={(e, value) => handleSettingChange('transition', null, 'blurAmount', value)}
+            onChange={(e, value) => handleSettingChange('effects', 'transition', 'blurAmount', value)}
             min={0}
-            max={20}
+            max={10}
             step={1}
-            marks
+            marks={[
+              { value: 0, label: '0' },
+              { value: 5, label: '5px' },
+              { value: 10, label: '10px' }
+            ]}
             valueLabelDisplay="auto"
+            valueLabelFormat={(value) => `${value}px`}
           />
         </Box>
         <Box sx={{ mt: 2 }}>
           <Typography gutterBottom>Karartma Opaklığı</Typography>
           <MuiSlider
             value={settings.effects.transition.darkOverlay}
-            onChange={(e, value) => handleSettingChange('transition', null, 'darkOverlay', value)}
+            onChange={(e, value) => handleSettingChange('effects', 'transition', 'darkOverlay', value)}
             min={0}
-            max={1}
-            step={0.1}
-            marks
+            max={0.5}
+            step={0.05}
+            marks={[
+              { value: 0, label: '0' },
+              { value: 0.25, label: '0.25' },
+              { value: 0.5, label: '0.5' }
+            ]}
             valueLabelDisplay="auto"
           />
         </Box>
@@ -601,7 +616,7 @@ const Settings = () => {
               control={
                 <Switch
                   checked={settings.effects.filmGrain.enabled}
-                  onChange={(e) => handleSettingChange('filmGrain', null, 'enabled', e.target.checked)}
+                  onChange={(e) => handleSettingChange('effects', 'filmGrain', 'enabled', e.target.checked)}
                 />
               }
               label="Film Grain Efekti"
@@ -613,7 +628,7 @@ const Settings = () => {
                 <Typography gutterBottom>Opaklık</Typography>
                 <MuiSlider
                   value={settings.effects.filmGrain.opacity}
-                  onChange={(e, value) => handleSettingChange('filmGrain', null, 'opacity', value)}
+                  onChange={(e, value) => handleSettingChange('effects', 'filmGrain', 'opacity', value)}
                   min={0}
                   max={0.2}
                   step={0.01}
@@ -625,7 +640,7 @@ const Settings = () => {
                 <Typography gutterBottom>Animasyon Hızı</Typography>
                 <MuiSlider
                   value={settings.effects.filmGrain.animationSpeed}
-                  onChange={(e, value) => handleSettingChange('filmGrain', null, 'animationSpeed', value)}
+                  onChange={(e, value) => handleSettingChange('effects', 'filmGrain', 'animationSpeed', value)}
                   min={1}
                   max={20}
                   step={1}
