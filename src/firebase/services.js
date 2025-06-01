@@ -118,7 +118,8 @@ export const getProducts = async () => {
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       name: doc.data().name,
-      images: doc.data().images
+      images: doc.data().images,
+      amazonLink: doc.data().amazonLink
     }));
   } catch (error) {
     console.error('Error getting products:', error);
