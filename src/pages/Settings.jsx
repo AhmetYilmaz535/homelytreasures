@@ -41,7 +41,7 @@ import {
   deleteImage,
   defaultSettings
 } from '../utils/imageStore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import imageCompression from 'browser-image-compression';
 import { storage } from '../firebase';
 
@@ -243,7 +243,19 @@ const Settings = () => {
       };
       
       const compressedFile = await imageCompression(file, options);
-      const storageRef = ref(storage, `logos/site_logo_${Date.now()}`);
+      
+      // Eski logoyu sil
+      if (settings.logo?.path) {
+        try {
+          const oldLogoRef = ref(storage, settings.logo.path);
+          await deleteObject(oldLogoRef);
+        } catch (error) {
+          console.warn('Error deleting old logo:', error);
+        }
+      }
+
+      // Yeni logoyu yükle
+      const storageRef = ref(storage, `site_assets/logo_${Date.now()}`);
       const uploadTask = uploadBytesResumable(storageRef, compressedFile);
       
       // Upload progress

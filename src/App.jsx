@@ -126,32 +126,32 @@ const Header = () => {
       mb: 3
     }}>
       <Toolbar>
-        {settings?.logo?.enabled && settings?.logo?.path ? (
-          <Box
-            component="img"
-            src={settings.logo.path}
-            alt={settings.logo.alt || 'Site Logo'}
-            sx={{
-              width: settings.logo.width ? `${settings.logo.width}px` : '150px',
-              height: settings.logo.height ? `${settings.logo.height}px` : '50px',
-              objectFit: 'contain',
-              mr: 2
-            }}
-          />
-        ) : (
-          <Typography 
-            variant="h6" 
-            component="div" 
-            sx={{ 
-              flexGrow: 1,
-              fontSize: '20px',
-              fontWeight: 700,
-              color: 'primary.main'
-            }}
-          >
-            The Homely Treasures
-          </Typography>
-        )}
+        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+          {settings?.logo?.enabled && settings?.logo?.path ? (
+            <Box
+              component="img"
+              src={settings.logo.path}
+              alt={settings.logo.alt || 'Site Logo'}
+              sx={{
+                width: settings.logo.width ? `${settings.logo.width}px` : '150px',
+                height: settings.logo.height ? `${settings.logo.height}px` : '50px',
+                objectFit: 'contain'
+              }}
+            />
+          ) : (
+            <Typography 
+              variant="h6" 
+              component="div" 
+              sx={{ 
+                fontSize: '20px',
+                fontWeight: 700,
+                color: 'primary.main'
+              }}
+            >
+              The Homely Treasures
+            </Typography>
+          )}
+        </Box>
         {!isHomePage && (
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button 
