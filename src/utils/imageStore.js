@@ -21,10 +21,10 @@ import imageCompression from 'browser-image-compression';
 
 // Varsayılan resimler
 const defaultImages = [
-  { id: 'default_1', path: '/images/slider1.jpg', order: 1 },
-  { id: 'default_2', path: '/images/slider2.jpg', order: 2 },
-  { id: 'default_3', path: '/images/slider3.jpg', order: 3 },
-  { id: 'default_4', path: '/images/slider4.jpg', order: 4 }
+  { id: 'default_1', path: '/images/ana1.jpg', order: 1 },
+  { id: 'default_2', path: '/images/ana2.jpg', order: 2 },
+  { id: 'default_3', path: '/images/ana3.jpg', order: 3 },
+  { id: 'default_4', path: '/images/ana4.jpg', order: 4 }
 ];
 
 // Maksimum yüklenebilecek resim sayısı
@@ -126,8 +126,8 @@ export const getAllAvailableImages = async () => {
     const imagesRef = collection(db, 'images');
     const q = query(imagesRef, orderBy('order', 'asc'));
     const snapshot = await getDocs(q);
+    console.log('Firebase snapshot:', snapshot.docs.map(doc => doc.data()));
     const images = snapshot.docs
-      .filter(doc => doc.id !== '_init') // _init belgesini filtrele
       .map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -307,13 +307,49 @@ const getImageDimensions = (file) => {
   });
 };
 
+// Firebase verilerini güncelle
+const updateFirebaseData = async () => {
+  try {
+    console.log('Updating Firebase data...');
+    
+    // Settings koleksiyonunu güncelle
+    await setDoc(doc(db, 'settings', 'sliderSettings'), defaultSettings);
+    
+    // SelectedImages koleksiyonunu güncelle
+    const batch = writeBatch(db);
+    
+    // Önce tüm seçili resimleri temizle
+    const selectedImagesSnapshot = await getDocs(collection(db, 'selectedImages'));
+    selectedImagesSnapshot.docs.forEach(doc => {
+      if (doc.id !== '_init') {
+        batch.delete(doc.ref);
+      }
+    });
+    
+    // Yeni resimleri ekle
+    defaultImages.forEach(image => {
+      const imageRef = doc(db, 'selectedImages', image.id);
+      batch.set(imageRef, image);
+    });
+    
+    await batch.commit();
+    console.log('Firebase data updated successfully');
+    window.dispatchEvent(new Event('settingsChanged'));
+    return true;
+  } catch (error) {
+    console.error('Error updating Firebase data:', error);
+    throw error;
+  }
+};
+
 // Slider ayarlarını al
 export const getSliderSettings = async () => {
   try {
+    console.log('Getting slider settings...');
+    
     // Ayarları al
     const settingsDoc = await getDoc(doc(db, 'settings', 'sliderSettings'));
-    let settings = settingsDoc.exists() ? settingsDoc.data() : defaultSettings;
-
+    
     // Seçili resimleri al
     const selectedImagesRef = collection(db, 'selectedImages');
     const selectedImagesSnapshot = await getDocs(selectedImagesRef);
@@ -323,33 +359,20 @@ export const getSliderSettings = async () => {
         id: doc.id,
         ...doc.data()
       }));
-
-    // Eğer seçili resim yoksa ve ayarlar yeni oluşturulduysa, varsayılan resimleri kaydet
-    if (selectedImages.length === 0 && !settingsDoc.exists()) {
-      // Varsayılan ayarları kaydet
-      await setDoc(doc(db, 'settings', 'sliderSettings'), defaultSettings);
-      
-      // Varsayılan resimleri kaydet
-      const batch = writeBatch(db);
-      for (const image of defaultImages) {
-        const imageRef = doc(db, 'images', image.id);
-        batch.set(imageRef, image);
-        
-        const selectedImageRef = doc(db, 'selectedImages', image.id);
-        batch.set(selectedImageRef, image);
-      }
-      await batch.commit();
-      
+    
+    // Eğer seçili resim yoksa veya eski resim yolları varsa, güncelle
+    if (selectedImages.length === 0 || selectedImages.some(img => img.path.includes('slider'))) {
+      console.log('Updating to new image paths...');
+      await updateFirebaseData();
       return {
         ...defaultSettings,
         images: defaultImages
       };
     }
-
-    // Seçili resimleri ayarlara ekle
+    
     return {
-      ...settings,
-      images: selectedImages.length > 0 ? selectedImages : defaultImages
+      ...settingsDoc.data(),
+      images: selectedImages
     };
   } catch (error) {
     console.error('Error getting slider settings:', error);

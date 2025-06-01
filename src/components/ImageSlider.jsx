@@ -1,43 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { Box, IconButton, Paper } from '@mui/material';
 import { ArrowBack, ArrowForward } from '@mui/icons-material';
-import { getSliderSettings } from '../utils/imageStore';
+import { getAllAvailableImages } from '../utils/imageStore';
 
 const ImageSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [images, setImages] = useState([]);
-  const [settings, setSettings] = useState(null);
 
-  // Firebase'den resimleri ve ayarları al
+  // Firebase'den resimleri al
   useEffect(() => {
-    const loadImagesAndSettings = async () => {
+    const loadImages = async () => {
       try {
-        const sliderData = await getSliderSettings();
-        if (sliderData?.images) {
-          setImages(sliderData.images);
-        }
-        setSettings(sliderData);
+        const firebaseImages = await getAllAvailableImages();
+        console.log('Firebase images:', firebaseImages);
+        setImages(firebaseImages);
       } catch (error) {
         console.error('Error loading images:', error);
       }
     };
 
-    loadImagesAndSettings();
-    // Settings değiştiğinde yeniden yükle
-    window.addEventListener('settingsChanged', loadImagesAndSettings);
-    return () => window.removeEventListener('settingsChanged', loadImagesAndSettings);
+    loadImages();
   }, []);
 
   // Otomatik geçiş için
   useEffect(() => {
-    if (!images.length || !settings?.autoplay) return;
+    if (!images.length) return;
 
     const interval = setInterval(() => {
       setCurrentIndex(prevIndex => (prevIndex + 1) % images.length);
-    }, settings?.autoplaySpeed || 3000);
+    }, 3000);
 
     return () => clearInterval(interval);
-  }, [images.length, settings]);
+  }, [images.length]);
 
   // Önceki resme geç
   const handlePrevClick = () => {
@@ -91,8 +85,6 @@ const ImageSlider = () => {
           }}
           onError={(e) => {
             console.error('Error loading image:', e.target.src);
-            // Bir sonraki resme geç
-            setCurrentIndex(prevIndex => (prevIndex + 1) % images.length);
           }}
         />
 
