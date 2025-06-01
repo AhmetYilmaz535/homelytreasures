@@ -273,6 +273,13 @@ const Settings = () => {
             }
           };
         }
+      } else if (section === 'logo') {
+        updateData = {
+          logo: {
+            ...settings.logo,
+            [key]: value
+          }
+        };
       }
       
       // Ayarları güncelle
@@ -291,6 +298,8 @@ const Settings = () => {
           } else {
             newSettings.footer[subsection][key] = value;
           }
+        } else if (section === 'logo') {
+          newSettings.logo = value;
         }
         
         setSettings(newSettings);
@@ -507,37 +516,134 @@ const Settings = () => {
       </SettingsSection>
 
       <SettingsSection title="Genel Ayarlar">
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings?.autoplay || false}
-              onChange={(e) => handleSettingChange('', '', 'autoplay', e.target.checked)}
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" gutterBottom>Logo Ayarları</Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={settings?.logo?.enabled || false}
+                      onChange={(e) => handleSettingChange('logo', '', 'enabled', e.target.checked)}
+                    />
+                  }
+                  label="Logo Göster"
+                />
+              </Grid>
+              {settings?.logo?.enabled && (
+                <>
+                  <Grid item xs={12}>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        disabled={loading}
+                      >
+                        Logo Yükle
+                        <input
+                          type="file"
+                          hidden
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            
+                            try {
+                              setLoading(true);
+                              const newImage = await addCustomImage(file);
+                              handleSettingChange('logo', '', 'path', newImage.path);
+                              showMessage('Logo başarıyla yüklendi!');
+                            } catch (error) {
+                              console.error('Error uploading logo:', error);
+                              showMessage(error.message || 'Logo yüklenirken bir hata oluştu!', 'error');
+                            } finally {
+                              setLoading(false);
+                            }
+                          }}
+                        />
+                      </Button>
+                      {settings.logo.path && (
+                        <Box
+                          component="img"
+                          src={settings.logo.path}
+                          alt="Logo Önizleme"
+                          sx={{
+                            maxWidth: '200px',
+                            height: 'auto',
+                            objectFit: 'contain'
+                          }}
+                        />
+                      )}
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Genişlik (px)"
+                      type="number"
+                      value={settings.logo?.width || 150}
+                      onChange={(e) => handleSettingChange('logo', '', 'width', parseInt(e.target.value))}
+                      InputProps={{ inputProps: { min: 50, max: 500 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Yükseklik (px)"
+                      type="number"
+                      value={settings.logo?.height || 50}
+                      onChange={(e) => handleSettingChange('logo', '', 'height', parseInt(e.target.value))}
+                      InputProps={{ inputProps: { min: 20, max: 200 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Alt Metni"
+                      value={settings.logo?.alt || 'Site Logo'}
+                      onChange={(e) => handleSettingChange('logo', '', 'alt', e.target.value)}
+                    />
+                  </Grid>
+                </>
+              )}
+            </Grid>
+          </Grid>
+
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings?.autoplay || false}
+                  onChange={(e) => handleSettingChange('', '', 'autoplay', e.target.checked)}
+                />
+              }
+              label="Otomatik Geçiş"
             />
-          }
-          label="Otomatik Geçiş"
-        />
-        {settings?.autoplay && (
-          <Box sx={{ mt: 2 }}>
-            <Typography gutterBottom>
-              Otomatik Geçiş Süresi (saniye)
-            </Typography>
-            <MuiSlider
-              value={settings?.autoplaySpeed || 6000}
-              onChange={(e, value) => handleSettingChange('', '', 'autoplaySpeed', value)}
-              min={2000}
-              max={10000}
-              step={1000}
-              marks={[
-                { value: 2000, label: '2s' },
-                { value: 6000, label: '6s' },
-                { value: 10000, label: '10s' },
-              ]}
-              valueLabelDisplay="auto"
-              valueLabelFormat={(value) => `${value/1000}s`}
-              sx={{ maxWidth: 300 }}
-            />
-          </Box>
-        )}
+            {settings?.autoplay && (
+              <Box sx={{ mt: 2 }}>
+                <Typography gutterBottom>
+                  Otomatik Geçiş Süresi (saniye)
+                </Typography>
+                <MuiSlider
+                  value={settings?.autoplaySpeed || 6000}
+                  onChange={(e, value) => handleSettingChange('', '', 'autoplaySpeed', value)}
+                  min={2000}
+                  max={10000}
+                  step={1000}
+                  marks={[
+                    { value: 2000, label: '2s' },
+                    { value: 6000, label: '6s' },
+                    { value: 10000, label: '10s' },
+                  ]}
+                  valueLabelDisplay="auto"
+                  valueLabelFormat={(value) => `${value/1000}s`}
+                  sx={{ maxWidth: 300 }}
+                />
+              </Box>
+            )}
+          </Grid>
+        </Grid>
       </SettingsSection>
 
       <SettingsSection title="Ken Burns Efekti">

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { 
@@ -16,6 +16,7 @@ import Footer from './components/Footer';
 import AdminPanel from './pages/AdminPanel';
 import AdminLogin from './pages/AdminLogin';
 import Settings from './pages/Settings';
+import { getSliderSettings } from './utils/imageStore';
 
 const theme = createTheme({
   palette: {
@@ -98,8 +99,24 @@ const theme = createTheme({
 
 const Header = () => {
   const location = useLocation();
+  const [settings, setSettings] = useState(null);
   const isHomePage = location.pathname === '/';
   const isAdminPage = location.pathname.startsWith('/admin') || location.pathname === '/settings';
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const sliderSettings = await getSliderSettings();
+        setSettings(sliderSettings);
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    };
+
+    loadSettings();
+    window.addEventListener('settingsChanged', loadSettings);
+    return () => window.removeEventListener('settingsChanged', loadSettings);
+  }, []);
 
   if (isAdminPage) return null;
 
@@ -109,18 +126,32 @@ const Header = () => {
       mb: 3
     }}>
       <Toolbar>
-        <Typography 
-          variant="h6" 
-          component="div" 
-          sx={{ 
-            flexGrow: 1,
-            fontSize: '20px',
-            fontWeight: 700,
-            color: 'primary.main'
-          }}
-        >
-          The Homely Treasures
-        </Typography>
+        {settings?.logo?.enabled && settings?.logo?.path ? (
+          <Box
+            component="img"
+            src={settings.logo.path}
+            alt={settings.logo.alt || 'Site Logo'}
+            sx={{
+              width: settings.logo.width ? `${settings.logo.width}px` : '150px',
+              height: settings.logo.height ? `${settings.logo.height}px` : '50px',
+              objectFit: 'contain',
+              mr: 2
+            }}
+          />
+        ) : (
+          <Typography 
+            variant="h6" 
+            component="div" 
+            sx={{ 
+              flexGrow: 1,
+              fontSize: '20px',
+              fontWeight: 700,
+              color: 'primary.main'
+            }}
+          >
+            The Homely Treasures
+          </Typography>
+        )}
         {!isHomePage && (
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button 

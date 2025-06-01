@@ -34,6 +34,13 @@ const MAX_IMAGES = 10;
 export const defaultSettings = {
   autoplay: true,
   autoplaySpeed: 6000,
+  logo: {
+    enabled: true,
+    path: '',
+    width: 150,
+    height: 50,
+    alt: 'Site Logo'
+  },
   effects: {
     kenBurns: {
       enabled: true,
