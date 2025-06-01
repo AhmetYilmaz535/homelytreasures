@@ -115,7 +115,7 @@ const Home = () => {
           Our Products
         </Typography>
         <Grid container spacing={4}>
-          {products.filter(product => product.isActive).map((product) => (
+          {products.map((product) => (
             <Grid item xs={12} sm={6} md={4} key={product.id}>
               <Card 
                 sx={{ 
