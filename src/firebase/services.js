@@ -7,7 +7,9 @@ import {
   doc, 
   getDocs,
   setDoc,
-  getDoc 
+  getDoc,
+  query,
+  where
 } from 'firebase/firestore';
 import { 
   ref, 
@@ -22,22 +24,31 @@ export const saveProduct = async (product) => {
   try {
     const imageUrls = [];
     // Resimleri Storage'a yükle
-    for (const imageFile of product.images) {
-      if (imageFile.startsWith('http')) {
-        imageUrls.push(imageFile);
+    for (const image of product.images) {
+      // Eğer resim zaten bir URL ise (mevcut resim)
+      if (typeof image === 'string' && image.startsWith('http')) {
+        imageUrls.push(image);
         continue;
       }
-      const imageRef = ref(storage, `products/${uuidv4()}`);
-      await uploadBytes(imageRef, imageFile);
-      const url = await getDownloadURL(imageRef);
-      imageUrls.push(url);
+
+      // Yeni yüklenen resim dosyası
+      if (image instanceof File) {
+        const imageRef = ref(storage, `products/${uuidv4()}.${image.name.split('.').pop()}`);
+        await uploadBytes(imageRef, image);
+        const url = await getDownloadURL(imageRef);
+        imageUrls.push(url);
+      }
     }
 
     // Ürün bilgilerini Firestore'a kaydet
     const productData = {
-      ...product,
+      name: product.name,
+      description: product.description || '',
+      amazonLink: product.amazonLink || '',
       images: imageUrls,
-      createdAt: new Date()
+      isActive: product.isActive,
+      createdAt: product.createdAt || new Date(),
+      updatedAt: new Date()
     };
 
     if (product.id) {
@@ -99,10 +110,15 @@ export const getSettings = async () => {
 // Ürünleri getir
 export const getProducts = async () => {
   try {
-    const querySnapshot = await getDocs(collection(db, 'products'));
+    const q = query(
+      collection(db, 'products'),
+      where('isActive', '==', true)
+    );
+    const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      name: doc.data().name,
+      images: doc.data().images
     }));
   } catch (error) {
     console.error('Error getting products:', error);

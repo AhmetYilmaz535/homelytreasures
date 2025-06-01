@@ -99,20 +99,28 @@ const Products = () => {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    const imagePromises = files.map(file => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
+    
+    // Dosya boyutu ve tip kontrolü
+    const validFiles = files.filter(file => {
+      const isValidType = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
+      const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
+      
+      if (!isValidType) {
+        showSnackbar('Sadece JPEG, PNG ve WEBP formatları desteklenir', 'error');
+      }
+      if (!isValidSize) {
+        showSnackbar('Resim boyutu 5MB\'dan küçük olmalıdır', 'error');
+      }
+      
+      return isValidType && isValidSize;
     });
 
-    Promise.all(imagePromises).then(imageUrls => {
+    if (validFiles.length > 0) {
       setCurrentProduct(prev => ({
         ...prev,
-        images: [...prev.images, ...imageUrls]
+        images: [...prev.images, ...validFiles]
       }));
-    });
+    }
   };
 
   const handleRemoveImage = (indexToRemove) => {
