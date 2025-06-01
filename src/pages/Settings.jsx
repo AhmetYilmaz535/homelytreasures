@@ -224,56 +224,78 @@ const Settings = () => {
         value = parseInt(value);
       }
       
-      // Nested yapıyı doğru şekilde güncelle
+      // Sadece değişen ayarı güncelle
+      let updateData = {};
+      
       if (section === 'effects') {
-        if (!newSettings.effects) {
-          newSettings.effects = {};
-        }
-        if (subsection) {
-          if (!newSettings.effects[subsection]) {
-            newSettings.effects[subsection] = {};
+        updateData = {
+          effects: {
+            ...settings.effects,
+            [subsection]: {
+              ...settings.effects[subsection],
+              [key]: value
+            }
           }
-          newSettings.effects[subsection][key] = value;
-        } else {
-          newSettings.effects[key] = value;
-        }
+        };
       } else if (section === 'texts') {
-        if (!newSettings.texts) {
-          newSettings.texts = {};
-        }
-        if (subsection) {
-          if (!newSettings.texts[subsection]) {
-            newSettings.texts[subsection] = {};
+        updateData = {
+          texts: {
+            ...settings.texts,
+            [subsection]: {
+              ...settings.texts[subsection],
+              [key]: value
+            }
           }
-          newSettings.texts[subsection][key] = value;
-        } else {
-          newSettings.texts[key] = value;
-        }
+        };
       } else if (section === 'footer') {
-        if (!newSettings.footer) {
-          newSettings.footer = {};
+        if (subsection === 'socialMedia' && key.includes('.')) {
+          const [platform, field] = key.split('.');
+          updateData = {
+            footer: {
+              ...settings.footer,
+              socialMedia: {
+                ...settings.footer.socialMedia,
+                [platform]: {
+                  ...settings.footer.socialMedia[platform],
+                  [field]: value
+                }
+              }
+            }
+          };
+        } else {
+          updateData = {
+            footer: {
+              ...settings.footer,
+              [subsection]: {
+                ...settings.footer[subsection],
+                [key]: value
+              }
+            }
+          };
         }
-        if (subsection) {
-          if (!newSettings.footer[subsection]) {
-            newSettings.footer[subsection] = {};
-          }
+      }
+      
+      // Ayarları güncelle
+      const result = await updateSliderSettings(updateData);
+      
+      if (result) {
+        // Yerel state'i güncelle
+        if (section === 'effects') {
+          newSettings.effects[subsection][key] = value;
+        } else if (section === 'texts') {
+          newSettings.texts[subsection][key] = value;
+        } else if (section === 'footer') {
           if (subsection === 'socialMedia' && key.includes('.')) {
             const [platform, field] = key.split('.');
-            if (!newSettings.footer.socialMedia[platform]) {
-              newSettings.footer.socialMedia[platform] = {};
-            }
             newSettings.footer.socialMedia[platform][field] = value;
           } else {
             newSettings.footer[subsection][key] = value;
           }
-        } else {
-          newSettings.footer[key] = value;
         }
+        
+        setSettings(newSettings);
+        setUnsavedChanges(true);
       }
-      
-      console.log('New settings:', newSettings);
-      setSettings(newSettings);
-      setUnsavedChanges(true);
     } catch (error) {
       console.error('Error updating settings:', error);
       console.error('Error details:', {

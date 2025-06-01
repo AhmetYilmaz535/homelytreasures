@@ -393,32 +393,10 @@ export const updateSliderSettings = async (newSettings) => {
     const settingsDoc = await getDoc(doc(db, 'settings', 'sliderSettings'));
     const currentSettings = settingsDoc.exists() ? settingsDoc.data() : defaultSettings;
     
-    // Yeni ayarları mevcut ayarlarla birleştir
+    // Sadece değişen ayarları güncelle
     const mergedSettings = {
-      autoplay: currentSettings.autoplay,
-      autoplaySpeed: currentSettings.autoplaySpeed,
-      effects: {
-        kenBurns: {
-          ...currentSettings.effects.kenBurns,
-          ...(newSettings.effects?.kenBurns || {})
-        },
-        transition: {
-          ...currentSettings.effects.transition,
-          ...(newSettings.effects?.transition || {})
-        },
-        filmGrain: {
-          ...currentSettings.effects.filmGrain,
-          ...(newSettings.effects?.filmGrain || {})
-        }
-      },
-      texts: {
-        ...currentSettings.texts,
-        ...(newSettings.texts || {})
-      },
-      footer: {
-        ...currentSettings.footer,
-        ...(newSettings.footer || {})
-      },
+      ...currentSettings,
+      ...newSettings,
       updatedAt: new Date().toISOString()
     };
     
